@@ -14,6 +14,8 @@
 	</p>
 <hr>
 
+![aigis](docs/content/aigis.png)
+
 # aigis
 
 `aigis` is a comprehensive toolkit for aerial and satellite imagery acquisition, processing, annotation, and analysis using artificial intelligence. This repository contains three main components:
