@@ -29,10 +29,9 @@
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/aigis.git
+git clone https://github.com/Sydney-Informatics-Hub/aigis.git
 cd aigis
 ```
-
 
 ## Usage
 
