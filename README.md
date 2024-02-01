@@ -18,9 +18,9 @@
 
 `aigis` is a comprehensive toolkit for aerial and satellite imagery acquisition, processing, annotation, and analysis using artificial intelligence. This repository contains three main components:
 
-1. **aigis annotate:** Tools for annotating aerial imagery data.
-2. **aigis convert:** Utilities for converting aerial imagery data to various formats, including COCO, GeoJSON, etc.
-3. **aigis segment:** Scripts and notebooks for segmenting aerial imagery using deep learning models.
+1. **annotate:** Tools for annotating aerial imagery data.
+2. **convert:** Utilities for converting aerial imagery data to various formats, including COCO, GeoJSON, etc.
+3. **segment:** Scripts and notebooks for segmenting aerial imagery using deep learning models.
 
 ## Installation
 
