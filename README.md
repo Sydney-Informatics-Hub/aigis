@@ -44,6 +44,27 @@ Tools for converting aerial imagery data to various formats. For detailed instru
 ### segment
 Scripts for segmenting aerial imagery using deep learning models. Refer to the aerial_segmentation directory for more details.
 
+### Recommended System Requirements
+
+All tools were built for Linux or MacOS systems.
+
+High resolution aerial imagery quickly becomes very computationally intensive to work with, so we recommend using high powered workstations or cloud computing environments.
+
+Segmentation model fine tuning and prediction are best with CUDA GPUs. An RTX 4090 or A100 is recommended for best performance. 
+Models can be fine tuned on Google Colab free T4 GPUs, but larger datasets and longer runs should run on other compute platforms.
+
+## Example Usage
+
+### Building Segmentation
+
+We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment building outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
+
+Our models's predictions are available as a shapefile in GeoJSON, with almost one million buildings (980k).
+
+![Greater Sydney Buildings](docs/content/gsu_buildings.png)
+
+### Tree Segmentation
+
 ##  Contributing
 
 Contributions are welcome! Here are several ways you can contribute:
