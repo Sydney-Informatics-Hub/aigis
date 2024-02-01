@@ -65,6 +65,8 @@ Our models's predictions are available as a shapefile in GeoJSON, with almost on
 
 ### Tree Segmentation
 
+WIP
+
 ##  Contributing
 
 Contributions are welcome! Here are several ways you can contribute:
@@ -102,9 +104,24 @@ Once your PR is reviewed and approved, it will be merged into the main branch.
 
 ---
 
+## About Us
+
+This software was developed by the Sydney Informatics Hub, a core research facility of the University of Sydney.
+
+The project team includes:
+
+- Henry Lydecker
+- Sahand Vahidnia
+- Xinwei Luo
+- Thomas Mauch
+
 ##  License
 
 This project is protected under the [MIT Licence](https://choosealicense.com/licenses) License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/) file.
 
 
 ##  Acknowledgments
+
+Acknowledgements are an important way for us to demonstrate the value we bring to your research. Your research outcomes are vital for ongoing funding of the Sydney Informatics Hub. If you make use of this software for your research project, please include the following acknowledgement:
+
+>This research was supported by the Sydney Informatics Hub, a Core Research Facility of the University of Sydney.
