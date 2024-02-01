@@ -33,33 +33,17 @@ git clone https://github.com/yourusername/aigis.git
 cd aigis
 ```
 
-To work with each of the sub modules individually, navigate to their directories and install their dependencies:
-
-```bash
-cd aigis_annotate
-pip install -r requirements.txt
-```
-
-```bash
-cd ../aigis_convert
-pip install -r requirements.txt
-```
-
-```bash
-cd ../aigis_segment
-pip install -r requirements.txt
-```
 
 ## Usage
 
-### aigis annotate
-This component provides scripts for annotating aerial imagery data. Detailed usage instructions can be found in the aerial_annotation directory.
+### annotate
+Scripts for annotating aerial imagery data. Detailed usage instructions can be found in the aerial_annotation directory.
 
-### aigis convert
-Aerial Conversion includes tools for converting aerial imagery data to various formats. For detailed instructions, refer to the aerial_conversion directory.
+### convert
+Tools for converting aerial imagery data to various formats. For detailed instructions, refer to the aerial_conversion directory.
 
-### aigis segment
-Aerial Segmentation contains scripts and notebooks for segmenting aerial imagery using deep learning models. Refer to the aerial_segmentation directory for more details.
+### segment
+Scripts for segmenting aerial imagery using deep learning models. Refer to the aerial_segmentation directory for more details.
 
 ##  Contributing
 
