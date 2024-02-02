@@ -12,7 +12,7 @@ import numpy as np
 import rasterio
 import rioxarray
 import torch
-from aerial_conversion.tiles import save_tiles
+from aigis.convert.tiles import save_tiles
 from matplotlib import pylab as plt
 from PIL import Image
 from samgeo.common import download_file, raster_to_geojson
