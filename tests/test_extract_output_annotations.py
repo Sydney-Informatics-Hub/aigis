@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from aerialseg.utils import extract_output_annotations
+from aigis.segment.utils import extract_output_annotations
 
 
 def test_output_dims():
