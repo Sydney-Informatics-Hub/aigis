@@ -12,8 +12,9 @@ import numpy as np
 import rasterio
 import rioxarray
 import torch
+from aigis.annotate import show_mask
 from aigis.convert.tiles import save_tiles
-from matplotlib import pylab as plt
+
 from PIL import Image
 from samgeo.common import download_file, raster_to_geojson
 from samgeo.text_sam import LangSAM, array_to_image
@@ -22,38 +23,6 @@ from samgeo.text_sam import LangSAM, array_to_image
 def is_empty(path):
     """Check if specified path is a valid and empty dir."""
     return os.path.isdir(path) and not os.listdir(path)
-
-
-def show_mask(
-    image, mask, alpha=0.1, cmap="viridis", edges=True, edge_colour="green", output=None
-):
-    """Plot a mask overlaid onto an image, with highlighted edges if required.
-
-    Inputs
-    ======
-    image (np.ndarray): An input image array - ideally in colour
-    mask (np.ndarray): An input mask array - two values (0=masked, 255=unmasked)
-
-    alpha (float, optional): Transparency of mask when overlaid onto image
-    cmap (str, optional): Colourmap to use for mask image
-    edges (bool, optional): determine the edges of the mask and draw a solid line from these
-    edge_colour (str, optional): colour of the edge highlight
-    output (str, optional): filename to output figure to (if None, plot on the screen)
-    """
-    fig = plt.figure(figsize=(20, 20))
-    plt.imshow(image)
-    plt.axis("off")
-    mask_arr = mask[:, :, 0]
-    mask_arr = np.ma.masked_where(mask_arr == 0, mask_arr)
-    plt.imshow(mask_arr, alpha=alpha, cmap=cmap, vmin=0, vmax=255)
-    if edges:
-        plt.contour(mask[:, :, 0], [0], colors=[edge_colour])
-    if output:
-        plt.savefig(output)
-    else:
-        plt.show()
-    plt.clf()
-    plt.close(fig)
 
 
 def predict_with_box_reject(
