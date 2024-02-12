@@ -13,14 +13,14 @@ from pathlib import Path
 import geopandas as gpd
 import rasterio as rio
 
-from aerial_conversion.coco import (
+from aigis.convert.coco import (
     coco_image_annotations,
     coco_json,
     coco_polygon_annotations,
     make_category_object,
 )
-from aerial_conversion.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
-from aerial_conversion.tiles import save_tiles
+from aigis.convert.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
+from aigis.convert.tiles import save_tiles
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)

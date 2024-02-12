@@ -18,16 +18,16 @@ from shapely.geometry import Polygon
 from shapely.ops import unary_union
 from tqdm import tqdm
 
-from aerial_conversion.coco import (
+from aigis.convert.coco import (
     coco_annotation_per_image_df,
     coco_categories_dict,
     polygon_prep,
 )
-from aerial_conversion.coordinates import (
+from aigis.convert.coordinates import (
     pixel_segmentation_to_spatial_rio,
     read_crs_from_raster,
 )
-from aerial_conversion.tiles import get_tiles_list_from_dir, load_tiles_from_list
+from aigis.convert.tiles import get_tiles_list_from_dir, load_tiles_from_list
 
 # import rasterio as rio
 warnings.simplefilter(action="ignore", category=FutureWarning)

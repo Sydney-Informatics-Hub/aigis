@@ -7,11 +7,9 @@ import json
 import os
 
 from detectron2.config import get_cfg
-
-# from detectron2.data import MetadataCatalog
 from detectron2.engine import DefaultPredictor
 
-from aerialseg.utils import assemble_coco_json, extract_all_annotations_df
+from aigis.segment.utils import assemble_coco_json, extract_all_annotations_df
 
 
 def create_parser():

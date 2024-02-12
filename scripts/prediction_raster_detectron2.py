@@ -9,14 +9,13 @@ import os
 
 # import geopandas as gpd
 import rasterio as rio
-from aerial_conversion.coco import raster_to_coco
-from aerial_conversion.tiles import save_tiles
+
+from aigis.convert.coco import raster_to_coco
+from aigis.convert.tiles import save_tiles
+from aigis.segment.utils import assemble_coco_json, extract_all_annotations_df
+
 from detectron2.config import get_cfg
-
-# from detectron2.data import MetadataCatalog
 from detectron2.engine import DefaultPredictor
-
-from aerialseg.utils import assemble_coco_json, extract_all_annotations_df
 
 # import traceback
 

@@ -12,6 +12,8 @@ from matplotlib import pylab as plt
 from PIL import Image
 from shapely.geometry import Polygon
 from tqdm import tqdm
+import geopandas as gpd
+import folium
 
 """
 Plotting and visualisation utilities
@@ -309,3 +311,88 @@ def visualize_or_save_image(image: str, predictor, meta=None, png_out: str = "")
         plt.savefig(png_out)
     else:
         plt.show()
+
+
+
+
+def visualize_geoparquet(geoparquet_path):
+    """Visualize geoparquet vector polygons on a leaflet map.
+
+    Args:
+        geoparquet_path (str): Path to the geoparquet file.
+
+    Returns:
+        None
+    """
+    # Read the geoparquet file
+    gdf = gpd.read_parquet(geoparquet_path)
+
+    # Create a folium map
+    m = folium.Map()
+
+    # Add the polygons to the map
+    for _, row in gdf.iterrows():
+        folium.GeoJson(row.geometry).add_to(m)
+
+    # Display the map
+    display(m)
+
+
+def generate_synthetic_coco_dataset(num_images=1, image_width=10, image_height=10, num_objects=1, num_classes=1):
+    """
+    Generate a synthetic COCO dataset with specified number of images, dimensions, segmented objects, and classes.
+
+    Args:
+        num_images (int): Number of images to generate. Default is 5.
+        image_width (int): Width of the images. Default is 10.
+        image_height (int): Height of the images. Default is 10.
+        num_objects (int): Number of segmented objects per image. Default is 5.
+        num_classes (int): Number of classes. Default is 2.
+
+    Returns:
+        dict: Synthetic COCO dataset in COCO JSON format.
+    """
+    dataset = {
+        "info": "",
+        "licenses": [],
+        "images": [],
+        "annotations": [],
+        "categories": []
+    }
+
+    # Generate categories
+    for i in range(num_classes):
+        category = {
+            "id": i + 1,
+            "name": f"class_{i + 1}",
+            "supercategory": ""
+        }
+        dataset["categories"].append(category)
+
+    # Generate images and annotations
+    for image_id in range(num_images):
+        image = {
+            "id": image_id + 1,
+            "width": image_width,
+            "height": image_height,
+            "file_name": f"image_{image_id + 1}.jpg",
+            "license": "",
+            "flickr_url": "",
+            "coco_url": "",
+            "date_captured": ""
+        }
+        dataset["images"].append(image)
+
+        for obj_id in range(num_objects):
+            annotation = {
+                "id": image_id * num_objects + obj_id + 1,
+                "image_id": image_id + 1,
+                "category_id": np.random.randint(1, num_classes + 1),
+                "segmentation": [],
+                "area": 0,
+                "bbox": [],
+                "iscrowd": 0
+            }
+            dataset["annotations"].append(annotation)
+
+    return dataset
