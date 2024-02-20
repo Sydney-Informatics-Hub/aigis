@@ -6,9 +6,9 @@ import cv2
 import numpy as np
 import pandas as pd
 import supervision as sv
-from aerialseg import utils
-from aerial_conversion import coco
-from aerial_conversion import coordinates
+from aigis.segment import utils
+from aigis.convert import coco
+from aigis.convert import coordinates
 from detectron2.utils.visualizer import Visualizer
 from matplotlib import pylab as plt
 from PIL import Image

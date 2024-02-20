@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import supervision as sv
-from aerial_conversion import coco
+from aigis.convert import coco
 from detectron2.utils.visualizer import Visualizer
 from matplotlib import pylab as plt
 from PIL import Image

@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "aigis"
+version = "0.1.0"
+description = "Tools for aerial and satellite imagery acquisition, processing, annotation, and analysis using artificial intelligence"
+authors = ["Henry Lydecker <henry.lydecker@gmail.com>", "Sahand Vahidnia <sahand.vahidnia@sydney.edu.au>", "Xinwei Luo <xinwei.luo@sydney.edu.au>", "Thomas Mauch <thomas.mauch@sydney.edu.au>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.2.0"
+pillow = "^10.2.0"
+matplotlib = "^3.8.3"
+shapely = "^2.0.3"
+geopandas = "^0.14.3"
+rioxarray = "^0.15.1"
+rasterio = "^1.3.9"
+geoplot = "^0.5.1"
+fiona = "^1.9.5"
+pycocotools = "^2.0.7"
+funcy = "^2.0"
+argparse = "^1.4.0"
+scikit-learn = "^1.4.1.post1"
+scikit-multilearn = "^0.2.0"
+OWSLib = "^0.29.3"
+geojson = "^3.1.0"
+groundingdino-py = "^0.4.0"
+mercantile = "^1.2.1"
+numpy = "^1.26.4"
+opencv-python = "^4.9.0.80"
+osmtogeojson = "^0.0.2"
+overpass = "^0.7"
+requests = "^2.31.0"
+segment-geospatial = "^0.10.2"
+roboflow = "^1.1.19"
+wandb = "^0.16.3"
+torch = "^2.2.0"
+torchvision = "^0.17.0"
+onnx = "^1.15.0"
+onnxruntime = "^1.17.0"
+netron = "^7.4.9"
+pre-commit = "^3.6.2"
+Sphinx = "^7.2.6"
+sphinx-rtd-theme = "^2.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
