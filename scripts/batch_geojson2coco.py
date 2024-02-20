@@ -16,7 +16,7 @@ from pycocotools.coco import COCO
 from shapely.geometry import box
 from tqdm import tqdm
 
-from aerial_conversion.coordinates import wkt_parser
+from aigis.convert.coordinates import wkt_parser
 
 # set up logging
 logging.basicConfig(level=logging.WARN)
