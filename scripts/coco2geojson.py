@@ -23,7 +23,7 @@ from aerial_conversion.coco import (
     coco_categories_dict,
     polygon_prep,
 )
-from aerial_conversion.coordinates import (
+from aigis.convert.coordinates import (
     pixel_segmentation_to_spatial_rio,
     read_crs_from_raster,
 )
