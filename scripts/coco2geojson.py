@@ -27,7 +27,7 @@ from aerial_conversion.coordinates import (
     pixel_segmentation_to_spatial_rio,
     read_crs_from_raster,
 )
-from aerial_conversion.tiles import get_tiles_list_from_dir, load_tiles_from_list
+from aigis.convert.tiles import get_tiles_list_from_dir, load_tiles_from_list
 
 # import rasterio as rio
 warnings.simplefilter(action="ignore", category=FutureWarning)
