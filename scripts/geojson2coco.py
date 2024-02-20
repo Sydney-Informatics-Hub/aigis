@@ -13,14 +13,14 @@ from pathlib import Path
 import geopandas as gpd
 import rasterio as rio
 
-from aigis.convert.coco import (
+from aerial_conversion.coco import (
     coco_image_annotations,
     coco_json,
     coco_polygon_annotations,
     make_category_object,
 )
-from aigis.convert.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
-from aigis.convert.tiles import save_tiles
+from aerial_conversion.coordinates import pixel_polygons_for_raster_tiles, wkt_parser
+from aerial_conversion.tiles import save_tiles
 
 logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
@@ -218,6 +218,9 @@ def main(args=None):
     log.debug("Class id is: %s", geojson["class_id"])
     log.debug("Trim class is: %s", trim_class)
     categories_json = make_category_object(geojson, class_column, trim_class)
+    
+    # Make sure geojson class_column is string type
+    geojson[class_column] = geojson[class_column].astype(str)
 
     # If license is not supplied, use MIT by default
     if license is None:

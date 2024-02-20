@@ -14,20 +14,20 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 from tqdm import tqdm
 
-from aigis.convert.coco import (
+from aerial_conversion.coco import (
     coco_annotation_per_image_df,
     coco_categories_dict,
     polygon_prep,
 )
-from aigis.convert.coordinates import (
+from aerial_conversion.coordinates import (
     pixel_segmentation_to_spatial_rio,
     read_crs_from_raster,
 )
-from aigis.convert.tiles import get_tiles_list_from_dir, load_tiles_from_list
+from aerial_conversion.tiles import get_tiles_list_from_dir, load_tiles_from_list
 
 # import rasterio as rio
 warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -36,6 +36,53 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 log = logging.getLogger(__name__)
 
 tqdm.pandas()
+
+
+def convert_multipolygon_to_polygons(geometry):
+    """Convert a MultiPolygon to a list of Polygons.
+
+    Args:
+        geometry (shapely.geometry.MultiPolygon): MultiPolygon to convert
+
+    Returns:
+        list: List of Polygons
+    """
+
+    if isinstance(geometry, MultiPolygon):
+        return list(geometry.geoms)
+    else:
+        return [geometry]
+
+
+def multipolygon_to_polygons(gdf):
+    """Convert a GeoDataFrame with MultiPolygons to a GeoDataFrame with
+    Polygons.
+
+    Args:
+        gdf (GeoDataFrame): GeoDataFrame with MultiPolygons
+
+    Returns:
+        GeoDataFrame: GeoDataFrame with Polygons
+    """
+    # Create an empty list to hold the converted geometries
+    new_geometries = []
+
+    # Iterate over each row in the GeoDataFrame
+    for geometry in tqdm(gdf.geometry, total=gdf.shape[0]):
+        # If the geometry is a MultiPolygon
+        if isinstance(geometry, MultiPolygon):
+            # Convert each part of the MultiPolygon into a separate Polygon
+            for polygon in geometry:
+                new_geometries.append(polygon)
+        else:
+            # If it's not a MultiPolygon, just append the original geometry
+            new_geometries.append(geometry)
+
+    # Create a new GeoDataFrame with the converted geometries
+    new_gdf = gpd.GeoDataFrame(geometry=new_geometries)
+    new_gdf.crs = gdf.crs
+
+    return new_gdf
 
 
 def merge_class_polygons_geopandas(tiles_df_zone_groups, crs, keep_geom_type):
@@ -114,12 +161,11 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
         polygons_df (GeoDataFrame): GeoDataFrame of merged polygons
     """
     print(
-        "Using the unary_union method to merge overlapping polygons in each class/zone."
+        "Using the unary_union method to merge overlapping polygons in each class/zone.\n"
     )
     # polygons_df_zone_groups = []
-    for index, tiles_df_zone in tqdm(
-        enumerate(tiles_df_zone_groups), total=len(tiles_df_zone_groups)
-    ):
+    for index, tiles_df_zone in enumerate(tiles_df_zone_groups):
+        print(f"Processing zone {index+1} of {len(tiles_df_zone_groups)}")
         tiles_df_zone = tiles_df_zone.reset_index(drop=True)
 
         # Convert segmentations to polygons
@@ -130,10 +176,23 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
             axis=1,
         )
 
+        # Validate geometries
+        valid_geometries = []
+        for geom in tqdm(tiles_df_zone["geometry"], total=tiles_df_zone.shape[0]):
+            # Check if geometry is valid
+            if not geom.is_valid:
+                print(f"Invalid geometry found at index {index}: {geom}")
+                # Attempt to fix the invalid geometry
+                geom = geom.buffer(0)
+                if not geom.is_valid:
+                    print(f"Unable to fix geometry at index {index}, skipping")
+                    continue
+            valid_geometries.append(geom)
+
         # Merge overlapping polygons in each class/zone
         zone_name = tiles_df_zone["zone_name"][0]
         zone_code = tiles_df_zone["zone_code"][0]
-        multipolygon = unary_union(tiles_df_zone["geometry"])
+        multipolygon = unary_union(valid_geometries)
         # polygons = list(multipolygon.geoms)
 
         if index == 0:
@@ -171,13 +230,16 @@ def shape_regulariser(
         shapely.geometry.Polygon: Regularised polygon
     """
     polygon_point_tuples = list(polygon.exterior.coords)
-    polygon = polygon_prep(
-        polygon_point_tuples,
-        simplify_tolerance,
-        minimum_rotated_rectangle,
-        orthogonalisation,
-    )
-    polygon = Polygon(polygon)
+    try:
+        polygon = polygon_prep(
+            polygon_point_tuples,
+            simplify_tolerance,
+            minimum_rotated_rectangle,
+            orthogonalisation,
+        )
+        polygon = Polygon(polygon)
+    except Exception as e:
+        log.error(f"Could not regularise the polygon. Error message: {e}")
 
     return polygon
 
@@ -187,17 +249,16 @@ def shape_regulariser(
 
 def main(args=None):
     """Command-line driver."""
-    test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
+    # test_data_path = "/home/sahand/Data/GIS2COCO/chatswood/big_tiles_200_b/"
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
         "tiledir",
         type=Path,
-        default=test_data_path,
         help="Path to the input tiles directory with rasters. PNG files are not required.",
     )
     ap.add_argument(
         "cocojson",
-        default=os.path.join(test_data_path, "coco-out-tol_0.4-b.json"),
+        # default=os.path.join(test_data_path, "coco-out-tol_0.4-b.json"),
         type=Path,
         help="Path to the input coco json file.",
     )
@@ -210,13 +271,16 @@ def main(args=None):
     ap.add_argument(
         "--geojson-output",
         "-o",
-        # required=True,
-        default=os.path.join(
-            test_data_path,
-            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
-        ),
+        default=None,
         type=Path,
         help="Path to output geojson file.",
+    )
+    ap.add_argument(
+        "--geoparquet-output",
+        "-p",
+        default=None,
+        type=Path,
+        help="Path to output geoparquet file.",
     )
     ap.add_argument(
         "--tile-search-margin",
@@ -280,6 +344,7 @@ def main(args=None):
     Read tiles and COCO JSON, and convert to GeoJSON.
     """
     geojson_path = args.geojson_output
+    geopardquet_path = args.geoparquet_output
     tile_dir = args.tiledir
     meta_name = args.meta_name
     coco_json_path = args.cocojson
@@ -287,6 +352,23 @@ def main(args=None):
     simplify_tolerance = args.simplify_tolerance
     minimum_rotated_rectangle = args.minimum_rotated_rectangle
     orthogonalisation = args.orthogonalisation
+
+    if geojson_path is None and geopardquet_path is None:
+        geojson_path = os.path.join(
+            f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
+        )
+
+    print("Arguments:")
+    print(f"> Reading tiles from {tile_dir}")
+    print(f"> Reading COCO JSON from {coco_json_path}")
+    print(f"> Simplify tolerance (float): {float(simplify_tolerance)}")
+    print(f"> Simplify tolerance: {simplify_tolerance}")
+    print(f"> Minimum rotated rectangle: {minimum_rotated_rectangle}")
+    print(f"> Orthogonalisation: {orthogonalisation}")
+    print(f"> Writing Geoparquet to: {geopardquet_path}")
+    print(f"> Writing GeoJSON to {geojson_path}")
+
+    simplify_tolerance = float(simplify_tolerance)
 
     # keep_geom_type = (
     #     not args.not_keep_geom_type
@@ -338,9 +420,46 @@ def main(args=None):
     polygons_df = merge_class_polygons_shapely(tiles_df_zone_groups, crs)
     # polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow
 
-    # change crs of the gpd and its geometries to "epsg:4326"
+    # Save to geojson before orthogonalisation
+
+    if (
+        simplify_tolerance > 0
+        or minimum_rotated_rectangle is True
+        or orthogonalisation is True
+    ):
+        try:
+            polygons_df.to_file(
+                geojson_path.replace(".gejson", "-presimplification.geojson"),
+                driver="GeoJSON",
+            )
+        except Exception as e:
+            log.error(f"Could not save the raw file to geojson. Error message: {e}")
+
+    if (
+        simplify_tolerance > 0
+        or minimum_rotated_rectangle is True
+        or orthogonalisation is True
+    ):
+        try:
+            polygons_df.to_parquet(
+                geopardquet_path.replace(".geoparquet", "-presimplification.geoparquet")
+            )
+        except Exception as e:
+            log.error(f"Could not save the raw file to geoparquet. Error message: {e}")
+
+    # change crs of the gpd and its geometries to "epsg:4326" temporarily
     original_crs = polygons_df.crs
     polygons_df = polygons_df.to_crs("epsg:4326")
+
+    # Change multipolygons to polygons
+    print("Converting MultiPolygons to Polygons.")
+    # polygons_df["geometry"] = (
+    #     polygons_df["geometry"]
+    #     .apply(lambda geom: convert_multipolygon_to_polygons(geom))
+    #     .explode()
+    #     .reset_index(drop=True)
+    # )
+    polygons_df = multipolygon_to_polygons(polygons_df)
 
     print("Regularising the shape of the polygons.")
     # print(polygons_df)
@@ -359,8 +478,12 @@ def main(args=None):
     except Exception as e:
         log.error(f"Could not set Name property of geojson. Error message: {e}")
         print("FIX this code!")
+
     # Save to geojson
-    polygons_df.to_file(geojson_path, driver="GeoJSON")
+    if geojson_path is not None:
+        polygons_df.to_file(geojson_path, driver="GeoJSON")
+    if geopardquet_path is not None:
+        polygons_df.to_parquet(geopardquet_path)
 
 
 if __name__ == "__main__":
