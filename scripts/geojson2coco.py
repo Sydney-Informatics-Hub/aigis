@@ -13,7 +13,7 @@ from pathlib import Path
 import geopandas as gpd
 import rasterio as rio
 
-from aerial_conversion.coco import (
+from aigis.convert.coco import (
     coco_image_annotations,
     coco_json,
     coco_polygon_annotations,
