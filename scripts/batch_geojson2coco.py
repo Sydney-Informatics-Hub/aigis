@@ -15,8 +15,6 @@ import rasterio
 from pycocotools.coco import COCO
 from shapely.geometry import box
 from tqdm import tqdm
-from pathlib import Path
-
 
 from aigis.convert.coordinates import wkt_parser
 
@@ -37,6 +35,7 @@ def format_string(s, length=23):
     except TypeError:
         format_specifier = "{:<" + str(length) + "." + str(length) + "}"
         return format_specifier.format("NA")
+
 
 def resume(output_dir: str) -> list:
     """Resume a batch job from an output directory.
@@ -63,6 +62,7 @@ def resume(output_dir: str) -> list:
                 processed.append(sub_dir)
 
     return processed
+
 
 def crop_and_save_geojson(
     raster_dir: str,
@@ -117,6 +117,11 @@ def crop_and_save_geojson(
             # Crop the GeoJSON to the extent of the raster
             cropped_geojson = geojson[geojson.geometry.intersects(bbox)]
 
+            # Drop id feild from the geojson properties if there are duplicates
+            if 'id' in cropped_geojson.columns and cropped_geojson['id'].duplicated().any():
+                cropped_geojson = cropped_geojson.drop(columns=['id'])
+            
+
             # Save the cropped GeoJSON with the same naming pattern
             cropped_geojson_filename = os.path.join(
                 cropped_dir, os.path.basename(raster_file).split(".")[0] + ".geojson"
@@ -124,9 +129,11 @@ def crop_and_save_geojson(
             if os.path.exists(cropped_geojson_filename) and not force_overwrite:
                 continue
             else:
-                cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
+                if not cropped_geojson.empty:
+                    cropped_geojson.to_file(cropped_geojson_filename, driver="GeoJSON")
 
     return cropped_dir
+
 
 def process_single(args):
     """The main script with a sinle threaded implementation."""
@@ -231,211 +238,6 @@ def process_single(args):
 
     return individual_coco_datasets
 
-def process_vector_dir(args):
-    """
-    Check and process the vector directory.
-
-    Args:
-    - args: Command-line arguments.
-
-    This function checks if the provided vector directory exists. If the directory is not found and the provided file is a GeoJSON file, it crops the GeoJSON file to the extent of the raster file specified.
-
-    Returns:
-    - args: Updated command-line arguments.
-    """
-
-    # Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file
-    if not os.path.isdir(args.vector_dir):
-        if args.vector_dir.endswith(".geojson"):
-            logger.info(
-                "The vector-dir is not a directory, and is a geojson file. Cropping it to the extent of the raster file."
-            )
-            args.vector_dir = crop_and_save_geojson(
-                args.raster_dir,
-                args.vector_dir,
-                raster_extension=".tif",
-                user_crs=args.user_assumed_raster_crs,
-                force_overwrite=args.force_overwrite,
-            )
-        else:
-            raise ValueError(
-                "The vector-dir is not a directory, and is not a geojson file. Please provide a directory or a geojson file."
-            )
-    
-    return args
-
-def print_individual_coco_datasets(individual_coco_datasets):
-    """Print markdown output for individual COCO datasets."""
-    print("Running geojson2coco.py over raster and vector pairs:")
-    print()
-    print(
-        "|       Raster File       |       Vector File       |        JSON File        |"
-    )
-    print(
-        "| ----------------------- | ----------------------- | ----------------------- |"
-    )
-    for coco_file in individual_coco_datasets:
-        pair_dir = os.path.dirname(coco_file)
-        raster_file = os.path.basename(pair_dir) + ".tif"
-        vector_file = os.path.basename(pair_dir) + ".geojson"
-        print(
-            f"| {format_string(raster_file,23)} | {format_string(vector_file,23)} | {format_string(coco_file,23)} |"
-        )
-
-def concatenate_datasets(individual_coco_datasets: list[Path], args) -> None:
-    concatenated_coco = COCO()  # Create a new COCO dataset
-    concatenated_coco.dataset = {
-        "images": [],
-        "annotations": [],
-        "categories": [],
-        "licenses": [],
-        "info": {},
-    }
-
-    # Fix the category ids in annotations and categories blocks
-    category_index_checkpoint = 0
-    image_index_checkpoint = 0
-    annot_index_checkpoint = 0
-    for coco_file in tqdm(individual_coco_datasets):
-        image_index_map = {}
-        category_index_map = {}
-
-        try:
-            with open(coco_file, "r") as f:
-                dataset = json.load(f)
-        except FileNotFoundError:
-            print(f"Error: {coco_file} not found.")
-            continue
-
-        pair_dir = os.path.dirname(coco_file)
-        raster_name = os.path.basename(pair_dir)
-
-        for image_no, _ in enumerate(dataset["images"]):
-            dataset["images"][image_no]["file_name"] = os.path.join(
-                raster_name, dataset["images"][image_no]["file_name"]
-            )
-
-            image_index_map[
-                dataset["images"][image_no]["id"]
-            ] = image_index_checkpoint
-
-            dataset["images"][image_no]["id"] = image_index_checkpoint
-            image_index_checkpoint += 1
-
-        for _, dataset_category in enumerate(dataset["categories"]):
-            old_id = dataset_category["id"]
-
-            if dataset_category["name"] not in [
-                category["name"]
-                for category in concatenated_coco.dataset["categories"]
-            ]:
-                dataset_category["id"] = category_index_checkpoint
-                concatenated_coco.dataset["categories"].append(dataset_category)
-                category_index_map[old_id] = category_index_checkpoint
-                category_index_checkpoint += 1
-
-            else:
-                # find the existing mapping id
-                existing_mapping_id = None
-                for category in concatenated_coco.dataset["categories"]:
-                    if category["name"] == dataset_category["name"]:
-                        existing_mapping_id = category["id"]
-                        break
-                dataset_category["id"] = existing_mapping_id
-                category_index_map[old_id] = existing_mapping_id
-
-        for annotation_no, _ in enumerate(dataset["annotations"]):
-            annotation_image_id = dataset["annotations"][annotation_no]["image_id"]
-            dataset["annotations"][annotation_no]["image_id"] = image_index_map[
-                annotation_image_id
-            ]
-            dataset["annotations"][annotation_no]["id"] = annot_index_checkpoint
-
-            # make the segnmets list of lists if not already
-            if not isinstance(
-                dataset["annotations"][annotation_no]["segmentation"][0], list
-            ):
-                dataset["annotations"][annotation_no]["segmentation"] = [
-                    dataset["annotations"][annotation_no]["segmentation"]
-                ]
-
-            # fix the annotation category id by the category_index_map
-            dataset["annotations"][annotation_no][
-                "category_id"
-            ] = category_index_map[
-                dataset["annotations"][annotation_no]["category_id"]
-            ]
-
-            annot_index_checkpoint += 1
-
-        # Add the dataset to the concatenated COCO dataset
-        concatenated_coco.dataset["images"].extend(dataset["images"])
-        concatenated_coco.dataset["annotations"].extend(dataset["annotations"])
-
-        # Add the categories to the concatenated COCO dataset if dataset["categories"]["id"] are not already in the concatenated_coco.dataset["categories"]["id"]
-        for category in dataset["categories"]:
-            if category["id"] not in [
-                category["id"]
-                for category in concatenated_coco.dataset["categories"]
-            ]:
-                concatenated_coco.dataset["categories"].append(category)
-        try:
-            concatenated_coco.dataset["licenses"].extend(dataset["licenses"])
-        except KeyError:
-            pass
-
-        try:
-            concatenated_coco.dataset["info"] = dataset["info"]
-        except KeyError:
-            pass
-
-        try:
-            concatenated_coco.dataset["type"] = dataset["type"]
-        except KeyError:
-            pass
-
-    # Specify the output directory for the concatenated dataset
-    concatenated_output_dir = os.path.join(args.output_dir, "concatenated")
-    os.makedirs(concatenated_output_dir, exist_ok=True)
-
-    # Save the concatenated COCO dataset
-    concatenated_json_file = os.path.join(
-        concatenated_output_dir, "concatenated_coco.json"
-    )
-    with open(concatenated_json_file, "w") as f:
-        json.dump(concatenated_coco.dataset, f, indent=2)
-
-    print(f"\nConcatenated COCO dataset saved to: {concatenated_json_file}")
-
-    # Add roboflow compatible JSON and png files in a single directory named Roboflow
-    if args.roboflow_compatible:
-        roboflow_output_dir = os.path.join(args.output_dir, "Roboflow")
-        os.makedirs(roboflow_output_dir, exist_ok=True)
-
-        # Save the concatenated COCO dataset as roboflow compatible JSON
-        roboflow_json_file = os.path.join(roboflow_output_dir, "concatenated.json")
-        with open(roboflow_json_file, "w") as f:
-            json.dump(concatenated_coco.dataset, f, indent=2)
-
-        print(f"Roboflow compatible JSON saved to: {roboflow_json_file}")
-
-        # Open the json file as a text file, then replace all image paths with the updated paths (/tile_ -> _tile_), then save it
-        with open(roboflow_json_file, "r") as f:
-            roboflow_json = f.read()
-        roboflow_json = roboflow_json.replace("/tile_", "_tile_")
-        with open(roboflow_json_file, "w") as f:
-            f.write(roboflow_json)
-
-        # Copy all png files in the subdirectories to the roboflow_output_dir
-        in_pattern = roboflow_json_file.replace("concatenated.json", "/**/*.png")
-        files = glob.glob(in_pattern)
-
-        # Copy files to the out_dir and rename the file to the name of the directory it was in+the file name
-        for file in tqdm(files):
-            # print(file)
-            os.system(
-                f"cp {file} {os.path.join(roboflow_output_dir,os.path.basename(os.path.dirname(file)))}_{os.path.basename(file)}"
-            )
 
 def parse_arguments(args):
     parser = argparse.ArgumentParser(
@@ -507,6 +309,7 @@ def parse_arguments(args):
 
     return parser.parse_args(args)
 
+
 def main(args=None):
     """Convert raster and vector pairs to COCO JSON format.
 
@@ -522,23 +325,204 @@ def main(args=None):
     """
 
     args = parse_arguments(args)
-    
-    # Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file
-    args = process_vector_dir(args)
 
-    # Specify the output directory
+    # Check the vector-dir, and if it is not a dir, and is a single geojson file, then crop it to the extent of the raster file
+    if not os.path.isdir(args.vector_dir):
+        if args.vector_dir.endswith(".geojson"):
+            logger.info(
+                "The vector-dir is not a directory, and is a geojson file. Cropping it to the extent of the raster file."
+            )
+            args.vector_dir = crop_and_save_geojson(
+                args.raster_dir,
+                args.vector_dir,
+                raster_extension=".tif",
+                user_crs=args.user_assumed_raster_crs,
+                force_overwrite=args.force_overwrite,
+            )
+        else:
+            raise ValueError(
+                "The vector-dir is not a directory, and is not a geojson file. Please provide a directory or a geojson file."
+            )
+
+        # Specify the output directory
     if args.no_workers > 1:
         raise NotImplementedError("Parallel processing not implemented yet.")
     else:
         print("Running geojson2coco.py over raster and vector pairs:")
         individual_coco_datasets = process_single(args)
 
-    # # Generate markdown output for individual COCO datasets
-    print_individual_coco_datasets(individual_coco_datasets)
+    # Generate markdown output for individual COCO datasets
+    print("Running geojson2coco.py over raster and vector pairs:")
+    print()
+    print(
+        "|       Raster File       |       Vector File       |        JSON File        |"
+    )
+    print(
+        "| ----------------------- | ----------------------- | ----------------------- |"
+    )
+    for coco_file in individual_coco_datasets:
+        pair_dir = os.path.dirname(coco_file)
+        raster_file = os.path.basename(pair_dir) + ".tif"
+        vector_file = os.path.basename(pair_dir) + ".geojson"
+        print(
+            f"| {format_string(raster_file,23)} | {format_string(vector_file,23)} | {format_string(coco_file,23)} |"
+        )
 
+    # Concatenate COCO datasets if the --concatenate argument is enabled
     if args.concatenate:
-        # Concatenate COCO datasets if the --concatenate argument is enabled
-        concatenate_datasets(individual_coco_datasets, args)
+        concatenated_coco = COCO()  # Create a new COCO dataset
+        concatenated_coco.dataset = {
+            "images": [],
+            "annotations": [],
+            "categories": [],
+            "licenses": [],
+            "info": {},
+        }
+
+        # Fix the category ids in annotations and categories blocks
+        category_index_checkpoint = 0
+        image_index_checkpoint = 0
+        annot_index_checkpoint = 0
+        for coco_file in tqdm(individual_coco_datasets):
+            image_index_map = {}
+            category_index_map = {}
+
+            try:
+                with open(coco_file, "r") as f:
+                    dataset = json.load(f)
+            except FileNotFoundError:
+                print(f"Error: {coco_file} not found.")
+                continue
+
+            pair_dir = os.path.dirname(coco_file)
+            raster_name = os.path.basename(pair_dir)
+
+            for image_no, _ in enumerate(dataset["images"]):
+                dataset["images"][image_no]["file_name"] = os.path.join(
+                    raster_name, dataset["images"][image_no]["file_name"]
+                )
+
+                image_index_map[
+                    dataset["images"][image_no]["id"]
+                ] = image_index_checkpoint
+
+                dataset["images"][image_no]["id"] = image_index_checkpoint
+                image_index_checkpoint += 1
+
+            for _, dataset_category in enumerate(dataset["categories"]):
+                old_id = dataset_category["id"]
+
+                if dataset_category["name"] not in [
+                    category["name"]
+                    for category in concatenated_coco.dataset["categories"]
+                ]:
+                    dataset_category["id"] = category_index_checkpoint
+                    concatenated_coco.dataset["categories"].append(dataset_category)
+                    category_index_map[old_id] = category_index_checkpoint
+                    category_index_checkpoint += 1
+
+                else:
+                    # find the existing mapping id
+                    existing_mapping_id = None
+                    for category in concatenated_coco.dataset["categories"]:
+                        if category["name"] == dataset_category["name"]:
+                            existing_mapping_id = category["id"]
+                            break
+                    dataset_category["id"] = existing_mapping_id
+                    category_index_map[old_id] = existing_mapping_id
+
+            for annotation_no, _ in enumerate(dataset["annotations"]):
+                annotation_image_id = dataset["annotations"][annotation_no]["image_id"]
+                dataset["annotations"][annotation_no]["image_id"] = image_index_map[
+                    annotation_image_id
+                ]
+                dataset["annotations"][annotation_no]["id"] = annot_index_checkpoint
+
+                # make the segnmets list of lists if not already
+                if not isinstance(
+                    dataset["annotations"][annotation_no]["segmentation"][0], list
+                ):
+                    dataset["annotations"][annotation_no]["segmentation"] = [
+                        dataset["annotations"][annotation_no]["segmentation"]
+                    ]
+
+                # fix the annotation category id by the category_index_map
+                dataset["annotations"][annotation_no][
+                    "category_id"
+                ] = category_index_map[
+                    dataset["annotations"][annotation_no]["category_id"]
+                ]
+
+                annot_index_checkpoint += 1
+
+            # Add the dataset to the concatenated COCO dataset
+            concatenated_coco.dataset["images"].extend(dataset["images"])
+            concatenated_coco.dataset["annotations"].extend(dataset["annotations"])
+
+            # Add the categories to the concatenated COCO dataset if dataset["categories"]["id"] are not already in the concatenated_coco.dataset["categories"]["id"]
+            for category in dataset["categories"]:
+                if category["id"] not in [
+                    category["id"]
+                    for category in concatenated_coco.dataset["categories"]
+                ]:
+                    concatenated_coco.dataset["categories"].append(category)
+            try:
+                concatenated_coco.dataset["licenses"].extend(dataset["licenses"])
+            except KeyError:
+                pass
+
+            try:
+                concatenated_coco.dataset["info"] = dataset["info"]
+            except KeyError:
+                pass
+
+            try:
+                concatenated_coco.dataset["type"] = dataset["type"]
+            except KeyError:
+                pass
+
+        # Specify the output directory for the concatenated dataset
+        concatenated_output_dir = os.path.join(args.output_dir, "concatenated")
+        os.makedirs(concatenated_output_dir, exist_ok=True)
+
+        # Save the concatenated COCO dataset
+        concatenated_json_file = os.path.join(
+            concatenated_output_dir, "concatenated_coco.json"
+        )
+        with open(concatenated_json_file, "w") as f:
+            json.dump(concatenated_coco.dataset, f, indent=2)
+
+        print(f"\nConcatenated COCO dataset saved to: {concatenated_json_file}")
+
+        # Add roboflow compatible JSON and png files in a single directory named Roboflow
+        if args.roboflow_compatible:
+            roboflow_output_dir = os.path.join(args.output_dir, "Roboflow")
+            os.makedirs(roboflow_output_dir, exist_ok=True)
+
+            # Save the concatenated COCO dataset as roboflow compatible JSON
+            roboflow_json_file = os.path.join(roboflow_output_dir, "concatenated.json")
+            with open(roboflow_json_file, "w") as f:
+                json.dump(concatenated_coco.dataset, f, indent=2)
+
+            print(f"Roboflow compatible JSON saved to: {roboflow_json_file}")
+
+            # Open the json file as a text file, then replace all image paths with the updated paths (/tile_ -> _tile_), then save it
+            with open(roboflow_json_file, "r") as f:
+                roboflow_json = f.read()
+            roboflow_json = roboflow_json.replace("/tile_", "_tile_")
+            with open(roboflow_json_file, "w") as f:
+                f.write(roboflow_json)
+
+            # Copy all png files in the subdirectories to the roboflow_output_dir
+            in_pattern = roboflow_json_file.replace("concatenated.json", "/**/*.png")
+            files = glob.glob(in_pattern)
+
+            # Copy files to the out_dir and rename the file to the name of the directory it was in+the file name
+            for file in tqdm(files):
+                # print(file)
+                os.system(
+                    f"cp {file} {os.path.join(roboflow_output_dir,os.path.basename(os.path.dirname(file)))}_{os.path.basename(file)}"
+                )
 
 
 if __name__ == "__main__":

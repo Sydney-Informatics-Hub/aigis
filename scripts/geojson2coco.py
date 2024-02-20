@@ -218,6 +218,9 @@ def main(args=None):
     log.debug("Class id is: %s", geojson["class_id"])
     log.debug("Trim class is: %s", trim_class)
     categories_json = make_category_object(geojson, class_column, trim_class)
+    
+    # Make sure geojson class_column is string type
+    geojson[class_column] = geojson[class_column].astype(str)
 
     # If license is not supplied, use MIT by default
     if license is None:
