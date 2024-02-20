@@ -57,25 +57,33 @@ def save_images_as_gif(input_folder, output_gif_path, duration=100):
 
 
 def plot_polygons(polygons):
+    """
+    Plots a list of polygons.
 
-  # Reshape the coordinates to separate x and y values
-  olygons = [np.array(polygons[i]).reshape(-1, 2) for i in range(len(polygons))]
+    Parameters:
+    polygons (list): A list of polygons, where each polygon is represented as a list of coordinates.
 
-  # Create a plot
-  fig, ax = plt.subplots()
+    Returns:
+    None
+    """
+    # Reshape the coordinates to separate x and y values
+    polygons = [np.array(polygons[i]).reshape(-1, 2) for i in range(len(polygons))]
 
-  # Plot each polygon
-  for polygon in polygons:
-      ax.plot(polygon[:, 0], polygon[:, 1], marker='o', linestyle='-')
+    # Create a plot
+    fig, ax = plt.subplots()
 
-  # Set labels and title
-  ax.set_xlabel('X-axis')
-  ax.set_ylabel('Y-axis')
-  ax.set_title('Polygon Predictions')
-  plt.gca().invert_yaxis()
+    # Plot each polygon
+    for polygon in polygons:
+        ax.plot(polygon[:, 0], polygon[:, 1], marker='o', linestyle='-')
 
-  # Show the plot
-  plt.show()
+    # Set labels and title
+    ax.set_xlabel('X-axis')
+    ax.set_ylabel('Y-axis')
+    ax.set_title('Polygon Predictions')
+    plt.gca().invert_yaxis()
+
+    # Show the plot
+    plt.show()
 
 
 def polygon_prep(
