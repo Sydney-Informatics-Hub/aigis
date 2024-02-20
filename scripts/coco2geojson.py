@@ -18,7 +18,7 @@ from shapely.geometry import MultiPolygon, Polygon
 from shapely.ops import unary_union
 from tqdm import tqdm
 
-from aerial_conversion.coco import (
+from aigis.convert.coco import (
     coco_annotation_per_image_df,
     coco_categories_dict,
     polygon_prep,
