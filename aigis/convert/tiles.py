@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import glob
 import itertools
 import logging
@@ -6,11 +7,118 @@ import os
 
 import rasterio as rio
 import rasterio.windows as riow
+from shapely.geometry import Polygon, box
+from pyproj import Proj, transform
 
 """A collection of functions for manipulating raster tiles."""
 
 
 log = logging.getLogger(__name__)
+
+
+def create_grid_geojson(bbox, tile_size=1, crs='EPSG:4326', feature_collection_name="GSU_LCZ_subset"):
+    """
+    Create a GeoJSON feature collection representing a grid of tiles within a given bounding box.
+    
+    Parameters:
+    - bbox (tuple): The bounding box coordinates in the format (min_lon, min_lat, max_lon, max_lat).
+    - tile_size (float): The size of each tile in degrees of latitude and longitude. Default is 1.
+    - crs (str): The coordinate reference system of the bounding box. Default is 'EPSG:4326'.
+    - feature_collection_name (str): The name of the feature collection. Default is "GSU_LCZ_subset".
+    
+    Returns:
+    - str: The GeoJSON feature collection as a JSON string.
+    """
+    min_lon, min_lat, max_lon, max_lat = bbox
+    
+    # Check if the bounding box is large enough to create a grid
+    # Convert tile_size to degrees of latitude and longitude
+    tile_size_deg = tile_size / (111.32 * 1000)  # Approximate length of one degree of latitude in meters
+    
+    if max_lon - min_lon < tile_size_deg or max_lat - min_lat < tile_size_deg:
+        # Create a polygon encompassing the extent of the bounding box
+        bbox_polygon = box(min_lon, min_lat, max_lon, max_lat)
+        
+        # Create a GeoJSON feature for the bounding box
+        feature = {
+            "type": "Feature",
+            "properties": {
+                "id": 1,
+                "left": min_lon,
+                "top": max_lat,
+                "right": max_lon,
+                "bottom": min_lat
+            },
+            "geometry": bbox_polygon.__geo_interface__
+        }
+        
+        # Create a GeoJSON feature collection with the bounding box feature
+        feature_collection = {
+            "type": "FeatureCollection",
+            "name": feature_collection_name,
+            "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}},
+            "features": [feature]
+        }
+        
+        return json.dumps(feature_collection)
+    
+    # Transform coordinates if needed
+    if crs != 'EPSG:4326':
+        in_proj = Proj(init='epsg:4326')
+        out_proj = Proj(init=crs)
+        min_lon, min_lat = transform(in_proj, out_proj, min_lon, min_lat)
+        max_lon, max_lat = transform(in_proj, out_proj, max_lon, max_lat)
+    
+    # Calculate the number of tiles in x and y directions
+    num_tiles_x = int((max_lon - min_lon) / tile_size)
+    num_tiles_y = int((max_lat - min_lat) / tile_size)
+    
+    features = []
+    
+    for i in range(num_tiles_x):
+        for j in range(num_tiles_y):
+            # Calculate the coordinates of the current tile
+            tile_min_lon = min_lon + i * tile_size
+            tile_max_lon = min_lon + (i + 1) * tile_size
+            tile_min_lat = min_lat + j * tile_size
+            tile_max_lat = min_lat + (j + 1) * tile_size
+            
+            # Create a polygon for the current tile
+            tile_polygon = box(tile_min_lon, tile_min_lat, tile_max_lon, tile_max_lat)
+            
+            # Transform back to EPSG:4326 if needed
+            if crs != 'EPSG:4326':
+                in_proj = Proj(init=crs)
+                out_proj = Proj(init='epsg:4326')
+                tile_polygon = transform(in_proj, out_proj, tile_polygon)
+            
+            # Create a GeoJSON feature for the current tile with the desired properties
+            feature = {
+                "type": "Feature",
+                "properties": {
+                    "LCZ": 6.0,
+                    "id": f"{i}{j}",
+                    "left": tile_min_lon,
+                    "top": tile_max_lat,
+                    "right": tile_max_lon,
+                    "bottom": tile_min_lat,
+                    "row_index": j,
+                    "col_index": i
+                },
+                "geometry": tile_polygon.__geo_interface__
+            }
+            
+            features.append(feature)
+    
+    # Create a GeoJSON feature collection
+    feature_collection = {
+        "type": "FeatureCollection",
+        "name": feature_collection_name,
+        "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:OGC:1.3:CRS84"}},
+        "features": features
+    }
+    
+    return json.dumps(feature_collection)
 
 
 def get_tiles(
