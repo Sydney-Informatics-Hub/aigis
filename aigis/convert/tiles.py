@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import glob
 import itertools
 import logging
@@ -6,11 +7,89 @@ import os
 
 import rasterio as rio
 import rasterio.windows as riow
+from shapely.geometry import Polygon, box
+from pyproj import Proj, transform
 
 """A collection of functions for manipulating raster tiles."""
 
 
 log = logging.getLogger(__name__)
+
+
+def create_grid_geojson(bbox, tile_size):
+    """
+    Create a GeoJSON representation of a grid of tiles within the given bounding box.
+
+    Parameters:
+    bbox (tuple): A tuple containing the minimum and maximum longitude and latitude values of the bounding box.
+    tile_size (float): The size of each tile in degrees.
+
+    Returns:
+    str: A JSON string representing the GeoJSON feature collection.
+    """
+    min_lon, min_lat, max_lon, max_lat = bbox
+    
+    # Transform the coordinates to EPSG:3857 (Web Mercator) for easier calculations
+    in_proj = Proj(init='epsg:4326')
+    out_proj = Proj(init='epsg:3857')
+    min_lon, min_lat = transform(in_proj, out_proj, min_lon, min_lat)
+    max_lon, max_lat = transform(in_proj, out_proj, max_lon, max_lat)
+    
+    # Calculate the number of tiles in x and y directions
+    num_tiles_x = int((max_lon - min_lon) / tile_size)
+    num_tiles_y = int((max_lat - min_lat) / tile_size)
+    
+    features = []
+    
+    for i in range(num_tiles_x):
+        for j in range(num_tiles_y):
+            # Calculate the coordinates of the current tile
+            tile_min_lon = min_lon + i * tile_size
+            tile_max_lon = min_lon + (i + 1) * tile_size
+            tile_min_lat = min_lat + j * tile_size
+            tile_max_lat = min_lat + (j + 1) * tile_size
+            
+            # Convert the coordinates back to EPSG:4326
+            tile_min_lon, tile_min_lat = transform(out_proj, in_proj, tile_min_lon, tile_min_lat)
+            tile_max_lon, tile_max_lat = transform(out_proj, in_proj, tile_max_lon, tile_max_lat)
+            
+            # Create a polygon for the current tile
+            tile_polygon = box(tile_min_lon, tile_min_lat, tile_max_lon, tile_max_lat)
+            
+            # Create a GeoJSON feature for the current tile
+            feature = {
+                "type": "Feature",
+                "properties": {
+                    "id": i * num_tiles_y + j,
+                    "left": tile_min_lon,
+                    "top": tile_max_lat,
+                    "right": tile_max_lon,
+                    "bottom": tile_min_lat,
+                    "row_index": i,
+                    "col_index": j
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [list(tile_polygon.exterior.coords)]
+                }
+            }
+            
+            features.append(feature)
+    
+    # Create a GeoJSON feature collection
+    feature_collection = {
+        "type": "FeatureCollection",
+        "name": "GSU_grid_1",
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": "urn:ogc:def:crs:EPSG::3857"
+            }
+        },
+        "features": features
+    }
+    
+    return json.dumps(feature_collection)
 
 
 def get_tiles(

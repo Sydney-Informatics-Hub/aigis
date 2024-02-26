@@ -486,5 +486,28 @@ def main(args=None):
         polygons_df.to_parquet(geopardquet_path)
 
 
-if __name__ == "__main__":
-    main()
+    if len(tiles_list) == 1:
+        # Handle single input tile
+        single_tile_df = tiles_df.loc[tiles_df["tile_name"] == os.path.basename(tiles_list[0]).split(".")[0]]
+        if single_tile_df.empty:
+            log.warning("No annotations found for the single input tile.")
+        else:
+            single_tile_polygons_df = merge_class_polygons_shapely([single_tile_df], crs)
+            single_tile_polygons_df = multipolygon_to_polygons(single_tile_polygons_df)
+            single_tile_polygons_df["geometry"] = single_tile_polygons_df["geometry"].progress_apply(
+                lambda x: shape_regulariser(
+                    x, simplify_tolerance, minimum_rotated_rectangle, orthogonalisation
+                )
+            )
+            single_tile_polygons_df = single_tile_polygons_df.to_crs(original_crs)
+            single_tile_polygons_df.Name = meta_name
+
+            if geojson_path is not None:
+                single_tile_polygons_df.to_file(geojson_path, driver="GeoJSON")
+            if geopardquet_path is not None:
+                single_tile_polygons_df.to_parquet(geopardquet_path)
+    else:
+        log.warning("Multiple input tiles detected. The code will handle overlapping and adjacent tiles by default.")
+
+    if __name__ == "__main__":
+        main()
