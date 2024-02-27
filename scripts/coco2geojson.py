@@ -509,5 +509,5 @@ def main(args=None):
     else:
         log.warning("Multiple input tiles detected. The code will handle overlapping and adjacent tiles by default.")
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
