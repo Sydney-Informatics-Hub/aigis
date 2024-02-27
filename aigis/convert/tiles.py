@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import json
 import glob
 import itertools
+import json
 import logging
 import os
 
 import rasterio as rio
 import rasterio.windows as riow
-from shapely.geometry import Polygon, box
 from pyproj import Proj, transform
+from shapely.geometry import box
 
 """A collection of functions for manipulating raster tiles."""
 
@@ -17,8 +17,8 @@ log = logging.getLogger(__name__)
 
 
 def create_grid_geojson(bbox, tile_size):
-    """
-    Create a GeoJSON representation of a grid of tiles within the given bounding box.
+    """Create a GeoJSON representation of a grid of tiles within the given
+    bounding box.
 
     Parameters:
     bbox (tuple): A tuple containing the minimum and maximum longitude and latitude values of the bounding box.
@@ -28,19 +28,19 @@ def create_grid_geojson(bbox, tile_size):
     str: A JSON string representing the GeoJSON feature collection.
     """
     min_lon, min_lat, max_lon, max_lat = bbox
-    
+
     # Transform the coordinates to EPSG:3857 (Web Mercator) for easier calculations
-    in_proj = Proj(init='epsg:4326')
-    out_proj = Proj(init='epsg:3857')
+    in_proj = Proj(init="epsg:4326")
+    out_proj = Proj(init="epsg:3857")
     min_lon, min_lat = transform(in_proj, out_proj, min_lon, min_lat)
     max_lon, max_lat = transform(in_proj, out_proj, max_lon, max_lat)
-    
+
     # Calculate the number of tiles in x and y directions
     num_tiles_x = int((max_lon - min_lon) / tile_size)
     num_tiles_y = int((max_lat - min_lat) / tile_size)
-    
+
     features = []
-    
+
     for i in range(num_tiles_x):
         for j in range(num_tiles_y):
             # Calculate the coordinates of the current tile
@@ -48,14 +48,18 @@ def create_grid_geojson(bbox, tile_size):
             tile_max_lon = min_lon + (i + 1) * tile_size
             tile_min_lat = min_lat + j * tile_size
             tile_max_lat = min_lat + (j + 1) * tile_size
-            
+
             # Convert the coordinates back to EPSG:4326
-            tile_min_lon, tile_min_lat = transform(out_proj, in_proj, tile_min_lon, tile_min_lat)
-            tile_max_lon, tile_max_lat = transform(out_proj, in_proj, tile_max_lon, tile_max_lat)
-            
+            tile_min_lon, tile_min_lat = transform(
+                out_proj, in_proj, tile_min_lon, tile_min_lat
+            )
+            tile_max_lon, tile_max_lat = transform(
+                out_proj, in_proj, tile_max_lon, tile_max_lat
+            )
+
             # Create a polygon for the current tile
             tile_polygon = box(tile_min_lon, tile_min_lat, tile_max_lon, tile_max_lat)
-            
+
             # Create a GeoJSON feature for the current tile
             feature = {
                 "type": "Feature",
@@ -66,29 +70,24 @@ def create_grid_geojson(bbox, tile_size):
                     "right": tile_max_lon,
                     "bottom": tile_min_lat,
                     "row_index": i,
-                    "col_index": j
+                    "col_index": j,
                 },
                 "geometry": {
                     "type": "Polygon",
-                    "coordinates": [list(tile_polygon.exterior.coords)]
-                }
+                    "coordinates": [list(tile_polygon.exterior.coords)],
+                },
             }
-            
+
             features.append(feature)
-    
+
     # Create a GeoJSON feature collection
     feature_collection = {
         "type": "FeatureCollection",
         "name": "GSU_grid_1",
-        "crs": {
-            "type": "name",
-            "properties": {
-                "name": "urn:ogc:def:crs:EPSG::3857"
-            }
-        },
-        "features": features
+        "crs": {"type": "name", "properties": {"name": "urn:ogc:def:crs:EPSG::3857"}},
+        "features": features,
     }
-    
+
     return json.dumps(feature_collection)
 
 
@@ -158,8 +157,8 @@ def get_tiles(
             height=tile_height,
         ).intersection(big_window)
 
-        transform = riow.transform(window, geotiff.transform)
-        yield window, transform
+        transfrm = riow.transform(window, geotiff.transform)
+        yield window, transfrm
 
 
 def save_tiles(
@@ -193,10 +192,10 @@ def save_tiles(
     # with rio.open(raster_geotiffpath) as geotiff:
     tile_width, tile_height = tile_size, tile_size
     meta = geotiff.meta.copy()
-    for window, transform in get_tiles(
+    for window, transfrm in get_tiles(
         geotiff, tile_width, tile_height, map_units=map_units, offset=offset
     ):
-        meta["transform"] = transform
+        meta["transform"] = transfrm
         meta["width"], meta["height"] = window.width, window.height
         tile_path = os.path.join(
             out_path, tile_template.format(int(window.col_off), int(window.row_off))

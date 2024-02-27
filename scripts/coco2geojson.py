@@ -70,7 +70,7 @@ def multipolygon_to_polygons(gdf):
     zone_names = []
 
     # Iterate over each row in the GeoDataFrame
-    for idx,geometry in tqdm(enumerate(gdf.geometry), total=gdf.shape[0]):
+    for idx, geometry in tqdm(enumerate(gdf.geometry), total=gdf.shape[0]):
         # If the geometry is a MultiPolygon
         if isinstance(geometry, MultiPolygon):
             zone_code = gdf.loc[idx]["zone_code"]
@@ -191,7 +191,9 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
         for geom in tqdm(tiles_df_zone["geometry"], total=tiles_df_zone.shape[0]):
             # Check if geometry is valid
             if not geom.is_valid:
-                logging.warning(f"Invalid geometry found at index {index}: {str(geom)[:20]}...")
+                logging.warning(
+                    f"Invalid geometry found at index {index}: {str(geom)[:20]}..."
+                )
                 # Attempt to fix the invalid geometry
                 geom = geom.buffer(0)
                 if not geom.is_valid:
@@ -215,9 +217,7 @@ def merge_class_polygons_shapely(tiles_df_zone_groups, crs):
             polygons_df_tmp["zone_name"] = zone_name
             polygons_df = pd.concat([polygons_df, polygons_df_tmp], ignore_index=True)
 
-
     polygons_df = polygons_df.explode("geometry").reset_index(drop=True)
-    
 
     # for poly in tqdm(polygons[1:]):
     #     polygons_df_tmp = gpd.GeoDataFrame(crs=crs, geometry=[poly])
@@ -369,14 +369,13 @@ def main(args=None):
         geojson_path = os.path.join(
             f"coco_2_geojson_{datetime.today().strftime('%Y-%m-%d')}.geojson",
         )
-    
+
     geojson_path_dir = os.path.dirname(geojson_path)
     if not os.path.exists(geojson_path_dir):
         os.makedirs(geojson_path_dir)
     geopardquet_path_dir = os.path.dirname(geopardquet_path)
     if not os.path.exists(geopardquet_path_dir):
         os.makedirs(geopardquet_path_dir)
-
 
     print("Arguments:")
     print(f"> Reading tiles from {tile_dir}")
@@ -433,13 +432,13 @@ def main(args=None):
 
     # Group by zone ID, extract polygons, and merge overlapping polygons in the same zone
     tiles_df_grouped = tiles_df.groupby(["zone_code"]).groups
-    print("tiles_df_grouped:\n",tiles_df_grouped)
+    print("tiles_df_grouped:\n", tiles_df_grouped)
 
     tiles_df_zone_groups = list()
     for zone in tiles_df_grouped:
         tiles_df_zone_groups.append(tiles_df.loc[tiles_df_grouped[zone]])
 
-    print("tiles_df_zone_groups:\n",tiles_df_zone_groups)
+    print("tiles_df_zone_groups:\n", tiles_df_zone_groups)
     polygons_df = merge_class_polygons_shapely(tiles_df_zone_groups, crs)
     # polygons_df = merge_class_polygons_geopandas(tiles_df_zone_groups,crs,keep_geom_type) # geopandas overlay method -- slow
     # print("final geodataframe:\n",polygons_df)
@@ -449,7 +448,6 @@ def main(args=None):
     except Exception as e:
         log.error(f"Could not set Name property of geojson. Error message: {e}")
         print("FIX this code!")
-
 
     # Save to geojson before orthogonalisation
 
@@ -466,7 +464,6 @@ def main(args=None):
         except Exception as e:
             log.error(f"Could not save the raw file to geojson. Error message: {e}")
 
-
     if (
         simplify_tolerance > 0
         or minimum_rotated_rectangle is True
@@ -479,14 +476,13 @@ def main(args=None):
         except Exception as e:
             log.error(f"Could not save the raw file to geoparquet. Error message: {e}")
 
-
     # change crs of the gpd and its geometries to "epsg:4326" temporarily
     original_crs = polygons_df.crs
     polygons_df = polygons_df.to_crs("epsg:4326")
 
     # Change multipolygons to polygons
     print("Converting MultiPolygons to Polygons.")
-    
+
     # polygons_df["geometry"] = (
     #     polygons_df["geometry"]
     #     .apply(lambda geom: convert_multipolygon_to_polygons(geom))
@@ -505,7 +501,7 @@ def main(args=None):
 
     polygons_df = polygons_df.to_crs(original_crs)
 
-    print("polygons_df:\n",polygons_df)
+    print("polygons_df:\n", polygons_df)
 
     # Save to geojson
     if geojson_path is not None:
@@ -513,16 +509,21 @@ def main(args=None):
     if geopardquet_path is not None:
         polygons_df.to_parquet(geopardquet_path)
 
-
     if len(tiles_list) == 1:
         # Handle single input tile
-        single_tile_df = tiles_df.loc[tiles_df["tile_name"] == os.path.basename(tiles_list[0]).split(".")[0]]
+        single_tile_df = tiles_df.loc[
+            tiles_df["tile_name"] == os.path.basename(tiles_list[0]).split(".")[0]
+        ]
         if single_tile_df.empty:
             log.warning("No annotations found for the single input tile.")
         else:
-            single_tile_polygons_df = merge_class_polygons_shapely([single_tile_df], crs)
+            single_tile_polygons_df = merge_class_polygons_shapely(
+                [single_tile_df], crs
+            )
             single_tile_polygons_df = multipolygon_to_polygons(single_tile_polygons_df)
-            single_tile_polygons_df["geometry"] = single_tile_polygons_df["geometry"].progress_apply(
+            single_tile_polygons_df["geometry"] = single_tile_polygons_df[
+                "geometry"
+            ].progress_apply(
                 lambda x: shape_regulariser(
                     x, simplify_tolerance, minimum_rotated_rectangle, orthogonalisation
                 )
@@ -535,7 +536,10 @@ def main(args=None):
             if geopardquet_path is not None:
                 single_tile_polygons_df.to_parquet(geopardquet_path)
     else:
-        log.warning("Multiple input tiles detected. The code will handle overlapping and adjacent tiles by default.")
+        log.warning(
+            "Multiple input tiles detected. The code will handle overlapping and adjacent tiles by default."
+        )
+
 
 if __name__ == "__main__":
     main()

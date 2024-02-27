@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # aerialannotation/utils.py
 
-import json
 import geopandas as gpd
-from pprint import pprint
-from matplotlib import pylab as plt
+import numpy as np
 import pandas as pd
+from matplotlib import pylab as plt
+
 
 def show_mask(
     image, mask, alpha=0.1, cmap="viridis", edges=True, edge_colour="green", output=None
@@ -40,9 +40,8 @@ def show_mask(
 
 
 def geojson_csv_filter(geojson_path, csv_path):
-
-    """
-    Filter a GeoJSON loaded in as a GeoDataFrame based on matching feature IDs in a CSV file.
+    """Filter a GeoJSON loaded in as a GeoDataFrame based on matching feature
+    IDs in a CSV file.
 
     Parameters:
     - geojson_path (str): Path to the GeoJSON file.
@@ -56,9 +55,9 @@ def geojson_csv_filter(geojson_path, csv_path):
 
     # Load CSV file with feature IDs
     # TODO: Make this more robust and accept a list of ids instead.
-    ids_to_keep = set(pd.read_csv(csv_path)['id'])
+    ids_to_keep = set(pd.read_csv(csv_path)["id"])
 
     # Filter GeoDataFrame based on matching IDs
-    filtered_gdf = gdf[gdf['id'].isin(ids_to_keep)]
-    
+    filtered_gdf = gdf[gdf["id"].isin(ids_to_keep)]
+
     return filtered_gdf
