@@ -32,7 +32,7 @@ from aigis.convert.tiles import get_tiles_list_from_dir, load_tiles_from_list
 # import rasterio as rio
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
-
+logging.basicConfig(level=logging.WARNING)
 log = logging.getLogger(__name__)
 
 tqdm.pandas()
@@ -509,5 +509,5 @@ def main(args=None):
     else:
         log.warning("Multiple input tiles detected. The code will handle overlapping and adjacent tiles by default.")
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()

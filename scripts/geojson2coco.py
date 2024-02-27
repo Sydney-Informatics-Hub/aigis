@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """This script supports converting a vector shapefile and raster file into a
 COCO format dataset."""
-# -*- coding: utf-8 -*-
+
 import argparse
 import glob
 import logging
