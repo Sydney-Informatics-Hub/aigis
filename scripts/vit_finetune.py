@@ -1,3 +1,4 @@
+import argparse
 from sklearn.metrics import accuracy_score
 import numpy as np
 import transformers
@@ -17,24 +18,6 @@ from torchvision.transforms import (CenterCrop,
                                     ToTensor)
 
 
-_train_transforms = Compose(
-        [
-            RandomResizedCrop(size),
-            RandomHorizontalFlip(),
-            ToTensor(),
-            normalize,
-        ]
-    )
-
-_val_transforms = Compose(
-        [
-            Resize(size),
-            CenterCrop(size),
-            ToTensor(),
-            normalize,
-        ]
-    )
-
 def train_transforms(examples):
     examples['pixel_values'] = [_train_transforms(image.convert("RGB")) for image in examples['image']]
     return examples
@@ -53,72 +36,90 @@ def compute_metrics(eval_pred):
     predictions = np.argmax(predictions, axis=1)
     return dict(accuracy=accuracy_score(predictions, labels))
 
-dataset = load_dataset("imagefolder", data_dir="LCZs")
 
-train_ds = dataset["train"]
-test_ds = dataset["test"]
-val_ds = dataset["validation"]
+def main(args):
+    dataset = load_dataset("imagefolder", data_dir=args.data_dir)
 
-id2label = {id:label for id, label in enumerate(train_ds.features['label'].names)}
-label2id = {label:id for id,label in id2label.items()}
+    train_ds = dataset["train"]
+    test_ds = dataset["test"]
+    val_ds = dataset["validation"]
 
-processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
+    id2label = {id:label for id, label in enumerate(train_ds.features['label'].names)}
+    label2id = {label:id for id,label in id2label.items()}
 
-image_mean, image_std = processor.image_mean, processor.image_std
-size = processor.size["height"]
+    processor = ViTImageProcessor.from_pretrained(args.model_name)
 
-normalize = Normalize(mean=image_mean, std=image_std)
+    image_mean, image_std = processor.image_mean, processor.image_std
+    size = processor.size["height"]
 
-# Set the transforms
-train_ds.set_transform(train_transforms)
-val_ds.set_transform(val_transforms)
-test_ds.set_transform(val_transforms)
+    normalize = Normalize(mean=image_mean, std=image_std)
 
-train_dataloader = DataLoader(train_ds, collate_fn=collate_fn, batch_size=4)
+    # Set the transforms
+    train_ds.set_transform(train_transforms)
+    val_ds.set_transform(val_transforms)
+    test_ds.set_transform(val_transforms)
 
-model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224-in21k',
-                                                  id2label=id2label,
-                                                  label2id=label2id)
+    train_dataloader = DataLoader(train_ds, collate_fn=collate_fn, batch_size=args.train_batch_size)
 
-metric_name = "accuracy"
+    model = ViTForImageClassification.from_pretrained(args.model_name,
+                                                      id2label=id2label,
+                                                      label2id=label2id)
 
-args = TrainingArguments(
-    f"LCZs",
-    save_strategy="epoch",
-    evaluation_strategy="epoch",
-    learning_rate=2e-5,
-    per_device_train_batch_size=10,
-    per_device_eval_batch_size=4,
-    num_train_epochs=3,
-    weight_decay=0.01,
-    load_best_model_at_end=True,
-    metric_for_best_model=metric_name,
-    logging_dir='logs',
-    remove_unused_columns=False,
-)
+    metric_name = "accuracy"
 
-trainer = Trainer(
-    model,
-    args,
-    train_dataset=train_ds,
-    eval_dataset=val_ds,
-    data_collator=collate_fn,
-    compute_metrics=compute_metrics,
-    tokenizer=processor,
-)
+    training_args = TrainingArguments(
+        args.output_dir,
+        save_strategy="epoch",
+        evaluation_strategy="epoch",
+        learning_rate=args.learning_rate,
+        per_device_train_batch_size=args.train_batch_size,
+        per_device_eval_batch_size=args.eval_batch_size,
+        num_train_epochs=args.num_epochs,
+        weight_decay=args.weight_decay,
+        load_best_model_at_end=True,
+        metric_for_best_model=metric_name,
+        logging_dir=args.logging_dir,
+        remove_unused_columns=False,
+    )
 
-trainer.train()
+    trainer = Trainer(
+        model,
+        training_args,
+        train_dataset=train_ds,
+        eval_dataset=val_ds,
+        data_collator=collate_fn,
+        compute_metrics=compute_metrics,
+        tokenizer=processor,
+    )
 
-outputs = trainer.predict(test_ds)
+    trainer.train()
 
-print(outputs.metrics)
+    outputs = trainer.predict(test_ds)
 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+    print(outputs.metrics)
 
-y_true = outputs.label_ids
-y_pred = outputs.predictions.argmax(1)
+    from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-labels = train_ds.features['label'].names
-cm = confusion_matrix(y_true, y_pred)
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
-disp.plot(xticks_rotation=45)
+    y_true = outputs.label_ids
+    y_pred = outputs.predictions.argmax(1)
+
+    labels = train_ds.features['label'].names
+    cm = confusion_matrix(y_true, y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+    disp.plot(xticks_rotation=45)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Script description")
+    parser.add_argument("--data_dir", type=str, default="LCZs", help="Path to the dataset directory")
+    parser.add_argument("--model_name", type=str, default="google/vit-base-patch16-224-in21k", help="Pretrained model name")
+    parser.add_argument("--train_batch_size", type=int, default=10, help="Batch size for training")
+    parser.add_argument("--eval_batch_size", type=int, default=4, help="Batch size for evaluation")
+    parser.add_argument("--num_epochs", type=int, default=3, help="Number of training epochs")
+    parser.add_argument("--learning_rate", type=float, default=2e-5, help="Learning rate")
+    parser.add_argument("--weight_decay", type=float, default=0.01, help="Weight decay")
+    parser.add_argument("--output_dir", type=str, default="output", help="Output directory")
+    parser.add_argument("--logging_dir", type=str, default="logs", help="Logging directory")
+
+    args = parser.parse_args()
+    main(args)
