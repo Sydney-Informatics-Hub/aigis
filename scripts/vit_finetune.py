@@ -18,6 +18,28 @@ from torchvision.transforms import (CenterCrop,
                                     ToTensor)
 
 
+image_mean, image_std = processor.image_mean, processor.image_std
+size = processor.size["height"]
+
+normalize = Normalize(mean=image_mean, std=image_std)
+_train_transforms = Compose(
+        [
+            RandomResizedCrop(size),
+            RandomHorizontalFlip(),
+            ToTensor(),
+            normalize,
+        ]
+    )
+
+_val_transforms = Compose(
+        [
+            Resize(size),
+            CenterCrop(size),
+            ToTensor(),
+            normalize,
+        ]
+    )
+
 def train_transforms(examples):
     examples['pixel_values'] = [_train_transforms(image.convert("RGB")) for image in examples['image']]
     return examples
@@ -37,7 +59,9 @@ def compute_metrics(eval_pred):
     return dict(accuracy=accuracy_score(predictions, labels))
 
 
- def main(args):
+
+def main(args):
+
     dataset = load_dataset("imagefolder", data_dir=args.data_dir)
 
     train_ds = dataset["train"]
@@ -93,6 +117,8 @@ def compute_metrics(eval_pred):
     )
 
     trainer.train()
+
+    trainer.save_model(args.output_dir)
 
     outputs = trainer.predict(test_ds)
 
