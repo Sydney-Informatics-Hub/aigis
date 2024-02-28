@@ -37,7 +37,7 @@ def compute_metrics(eval_pred):
     return dict(accuracy=accuracy_score(predictions, labels))
 
 
-def main(args):
+ def main(args):
     dataset = load_dataset("imagefolder", data_dir=args.data_dir)
 
     train_ds = dataset["train"]
