@@ -3,21 +3,23 @@ import os
 import warnings
 
 import cv2
+import folium
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import supervision as sv
-from aigis.convert import coco
 from detectron2.utils.visualizer import Visualizer
 from matplotlib import pylab as plt
 from PIL import Image
 from shapely.geometry import Polygon
 from tqdm import tqdm
-import geopandas as gpd
-import folium
+
+from aigis.convert import coco
 
 """
 Plotting and visualisation utilities
 """
+
 
 def save_images_as_gif(input_folder, output_gif_path, duration=100):
     """Save a folder of images as an animated GIF.
@@ -57,8 +59,7 @@ def save_images_as_gif(input_folder, output_gif_path, duration=100):
 
 
 def plot_polygons(polygons):
-    """
-    Plots a list of polygons.
+    """Plots a list of polygons.
 
     Parameters:
     polygons (list): A list of polygons, where each polygon is represented as a list of coordinates.
@@ -74,12 +75,12 @@ def plot_polygons(polygons):
 
     # Plot each polygon
     for polygon in polygons:
-        ax.plot(polygon[:, 0], polygon[:, 1], marker='o', linestyle='-')
+        ax.plot(polygon[:, 0], polygon[:, 1], marker="o", linestyle="-")
 
     # Set labels and title
-    ax.set_xlabel('X-axis')
-    ax.set_ylabel('Y-axis')
-    ax.set_title('Polygon Predictions')
+    ax.set_xlabel("X-axis")
+    ax.set_ylabel("Y-axis")
+    ax.set_title("Polygon Predictions")
     plt.gca().invert_yaxis()
 
     # Show the plot
@@ -321,8 +322,6 @@ def visualize_or_save_image(image: str, predictor, meta=None, png_out: str = "")
         plt.show()
 
 
-
-
 def visualize_geoparquet(geoparquet_path):
     """Visualize geoparquet vector polygons on a leaflet map.
 
@@ -343,12 +342,14 @@ def visualize_geoparquet(geoparquet_path):
         folium.GeoJson(row.geometry).add_to(m)
 
     # Display the map
-    display(m)
+    # display(m)
 
 
-def generate_synthetic_coco_dataset(num_images=1, image_width=10, image_height=10, num_objects=1, num_classes=1):
-    """
-    Generate a synthetic COCO dataset with specified number of images, dimensions, segmented objects, and classes.
+def generate_synthetic_coco_dataset(
+    num_images=1, image_width=10, image_height=10, num_objects=1, num_classes=1
+):
+    """Generate a synthetic COCO dataset with specified number of images,
+    dimensions, segmented objects, and classes.
 
     Args:
         num_images (int): Number of images to generate. Default is 5.
@@ -365,16 +366,12 @@ def generate_synthetic_coco_dataset(num_images=1, image_width=10, image_height=1
         "licenses": [],
         "images": [],
         "annotations": [],
-        "categories": []
+        "categories": [],
     }
 
     # Generate categories
     for i in range(num_classes):
-        category = {
-            "id": i + 1,
-            "name": f"class_{i + 1}",
-            "supercategory": ""
-        }
+        category = {"id": i + 1, "name": f"class_{i + 1}", "supercategory": ""}
         dataset["categories"].append(category)
 
     # Generate images and annotations
@@ -387,7 +384,7 @@ def generate_synthetic_coco_dataset(num_images=1, image_width=10, image_height=1
             "license": "",
             "flickr_url": "",
             "coco_url": "",
-            "date_captured": ""
+            "date_captured": "",
         }
         dataset["images"].append(image)
 
@@ -399,7 +396,7 @@ def generate_synthetic_coco_dataset(num_images=1, image_width=10, image_height=1
                 "segmentation": [],
                 "area": 0,
                 "bbox": [],
-                "iscrowd": 0
+                "iscrowd": 0,
             }
             dataset["annotations"].append(annotation)
 

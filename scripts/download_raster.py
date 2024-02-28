@@ -2,7 +2,6 @@
 import os
 
 import geopandas as gpd
-
 from sa1 import SA1Image
 
 

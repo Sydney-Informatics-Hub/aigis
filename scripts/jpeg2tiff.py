@@ -39,8 +39,8 @@ def main():
         parser.add_argument(
             "--image_types",
             type=list,
-            default=(".jpg",".jpeg"),
-            help="List of image file extensions to consider, defaulting to .jpg and .jpeg"
+            default=(".jpg", ".jpeg"),
+            help="List of image file extensions to consider, defaulting to .jpg and .jpeg",
         )
         return parser.parse_args()
 

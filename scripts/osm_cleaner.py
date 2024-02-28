@@ -54,7 +54,7 @@ def cleaner_function(x):
 
 
 def level_average(intersecting_gdf, column, default_na=0):
-    """Get the average level of the buildings intersecting a block
+    """Get the average level of the buildings intersecting a block.
 
     Args:
         intersecting_gdf (gpd.GeoDataFrame): The GeoDataFrame of intersecting buildings.

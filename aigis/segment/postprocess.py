@@ -1,64 +1,53 @@
 # -*- coding: utf-8 -*-
-import os
 import warnings
 
-import cv2
+import geopandas as gpd
 import numpy as np
-import pandas as pd
-import supervision as sv
-from aigis.segment import utils
-from aigis.convert import coco
-from aigis.convert import coordinates
-from detectron2.utils.visualizer import Visualizer
-from matplotlib import pylab as plt
-from PIL import Image
-from shapely.geometry import Polygon
-from tqdm import tqdm
-
 import rasterio
 import rasterio.transform
+import supervision as sv
 from shapely.geometry import Polygon
-import geopandas as gpd
-from shapely.validation import make_valid
+
+from aigis.convert import coco
 
 
 def detectron2_to_polygons(outputs, prediction_simplification=1):
+    mask_array = outputs["instances"].pred_masks.to("cpu").numpy()
+    num_instances = mask_array.shape[0]
+    # scores = output['instances'].scores.to("cpu").numpy()
+    labels = outputs["instances"].pred_classes.to("cpu").numpy()
+    bbox = outputs["instances"].pred_boxes.to("cpu").tensor.numpy()
+    # print(mask_array.shape)
+    mask_array = np.moveaxis(mask_array, 0, -1)
+    mask_arrays = []
+    polygons = []
+    labels_list = []
+    bbox_list = []
 
-  mask_array = outputs["instances"].pred_masks.to("cpu").numpy()
-  num_instances = mask_array.shape[0]
-  # scores = output['instances'].scores.to("cpu").numpy()
-  labels = outputs["instances"].pred_classes.to("cpu").numpy()
-  bbox = outputs["instances"].pred_boxes.to("cpu").tensor.numpy()
-  # print(mask_array.shape)
-  mask_array = np.moveaxis(mask_array, 0, -1)
-  mask_arrays = []
-  polygons = []
-  labels_list = []
-  bbox_list = []
+    for i in range(num_instances):
+        # img = np.zeros_like(image)
+        mask_array_instance = mask_array[:, :, i : (i + 1)]
 
-  for i in range(num_instances):
-      # img = np.zeros_like(image)
-      mask_array_instance = mask_array[:, :, i : (i + 1)]
+        # img = np.where(mask_array_instance[i] == True, 255, img)
+        polygon_sv = sv.mask_to_polygons(mask_array_instance)
 
-      # img = np.where(mask_array_instance[i] == True, 255, img)
-      polygon_sv = sv.mask_to_polygons(mask_array_instance)
-
-      if len(polygon_sv) > 0:  # if there is at least one polygon
-          for polygon in polygon_sv:
-              polygon = polygon_prep(
-                  polygon,
-                  simplify_tolerance=prediction_simplification,
-                  minimum_rotated_rectangle=False,
+        if len(polygon_sv) > 0:  # if there is at least one polygon
+            for polygon in polygon_sv:
+                polygon = coco.polygon_prep(
+                    polygon,
+                    simplify_tolerance=prediction_simplification,
+                    minimum_rotated_rectangle=False,
                 )
-              mask_arrays.append(mask_array_instance)
-              labels_list.append(labels[i])
-              bbox_list.append(bbox[i])
-              polygons.append(polygon.flatten().tolist())
+                mask_arrays.append(mask_array_instance)
+                labels_list.append(labels[i])
+                bbox_list.append(bbox[i])
+                polygons.append(polygon.flatten().tolist())
 
-      else:
-          warnings.warn(f"Polygon {i} is empty! Skipping polygon.")
+        else:
+            warnings.warn(f"Polygon {i} is empty! Skipping polygon.")
 
-  return polygons
+    return polygons
+
 
 def convert_polygons_to_geospatial(polygons, tif_file):
     with rasterio.open(tif_file) as src:
@@ -67,7 +56,7 @@ def convert_polygons_to_geospatial(polygons, tif_file):
     # make polygons into an np array
     polygons = [np.array(polygons[i]).reshape(-1, 2) for i in range(len(polygons))]
 
-    geospatial_polygons = []  
+    geospatial_polygons = []
     for polygon_vertices in polygons:
         # Convert polygon vertices to geospatial coordinates
         geo_polygon = []
@@ -85,11 +74,11 @@ def convert_polygons_to_geospatial(polygons, tif_file):
         geospatial_polygons.append(shapely_polygon)
 
     # Create a GeoDataFrame from the Shapely polygons
-    gdf = gpd.GeoDataFrame({'geometry': geospatial_polygons})
-    #give the gdf the raster's crs
-    gdf = geo_dataframe.set_crs(src.crs)
+    gdf = gpd.GeoDataFrame({"geometry": geospatial_polygons})
+    # give the gdf the raster's crs
+    gdf = gdf.set_crs(src.crs)
 
     # Example saving geojson
-    #geo_dataframe.to_file("output.geojson", driver="GeoJSON")
-  
+    # geo_dataframe.to_file("output.geojson", driver="GeoJSON")
+
     return gdf
