@@ -22,7 +22,7 @@ Table of contetns
 
 -  `Input and Output Data Formats <#input-and-output-data-formats>`__
 
--  `Setup <#setup>`__
+-  `Installation <#installation>`__
 
 -  `Dataset <#dataset>`__
 
@@ -31,28 +31,12 @@ Table of contetns
 -  `Contributing to the Project <#contributing-to-the-project>`__
 
 
---------------
-
-
-Basic Usage
-===========
-
-
-Input and Output Data Formats
------------------------------
-
-The repository can convert between the following formats:
-
--  Images and annotations in COCO JSON format.
-
--  Georeferenced shapefile polygon vector files, with a readme file
-   linking to the original web map server or aerial imagery source to be
-   rendered.
 
 --------------
 
-Quick Setup
------------
+
+Installation
+------------
 
 Considering the system is ready, to install the package and all necessary requirements, please follow the instructions below:
 
