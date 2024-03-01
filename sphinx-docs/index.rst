@@ -1,17 +1,10 @@
-.. SoilWaterNow documentation master file, created by
-   sphinx-quickstart on Fri Feb 17 16:31:15 2023.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to AI annotation, segmentation, and conversion tools for GIS imagery documentation
-===========================================
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+.. Aerial Segmentation documentation master file
 
 
-aigis is a comprehensive toolkit for aerial and satellite imagery acquisition, processing, annotation, and analysis using artificial intelligence. This repository contains three main components:
+Welcome to AIGIS documentation
+==============================
+
+AIGIS is a comprehensive toolkit for aerial and satellite imagery acquisition, processing, annotation, and analysis using artificial intelligence. This repository contains three main components:
 
 annotate: Scripts for annotating aerial imagery data. Detailed usage instructions can be found in the aerial_annotation directory.
 
@@ -58,10 +51,13 @@ The repository can convert between the following formats:
 
 --------------
 
-Setup
------
+Quick Setup
+-----------
 
-::
+Considering the system is ready, to install the package and all necessary requirements, please follow the instructions below:
+
+.. code:: bash
+
    # Create a new conda environment
    conda create -n aigis python==3.10
    # Activate the environment
@@ -75,6 +71,36 @@ Setup
    pip install segment-geospatial groundingdino-py leafmap localtileserver
    pip install -e aigis
 
+If your system does have a GPU, but it has a clean install (like an AWS EC2 instance), you can use the following code to install the necessary libraries to prepare it for machine learning and computer vision tasks:
+
+System Prep
+~~~~~~~~~~~
+
+Before installing detectron2, we should make sure our system has the following requirements installed
+
+- g++ needs to be installed for detectron2: ``sudo apt-get install g++``
+- Install cv2 requirements: ``sudo apt-get update && apt-get install ffmpeg libsm6 libxext6 -y``
+- Finally, make sure NVIDIA drivers are installed, follow instructions `here <https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html#ubuntu-lts>`_.
+
+ This has been tested for tesla T4 GPUs. 
+ 
+ Note: no need to run post installation steps in case CUDA is installed on your conda env.
+
+Full example:
+
+.. code-block:: bash
+
+    sudo apt-get install g++
+    sudo apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
+    sudo apt-get install linux-headers-$(uname -r)
+    distribution=$(./etc/os-release;echo $ID$VERSION_ID | sed -e 's/\.//g')
+    wget https://developer.download.nvidia.com/compute/cuda/repos/$distribution/x86_64/cuda-keyring_1.0-1_all.deb
+    sudo dpkg -i cuda-keyring_1.0-1_all.deb
+    sudo apt-get update
+    sudo apt-get -y install cuda-drivers
+
+
+--------------
 
 Dataset
 -------
@@ -107,7 +133,7 @@ snippet:
    project = rf.workspace(workspace_name).project(project_name)
    dataset = project.version(dataset_version).download(dataset_download_name)
 
-
+--------------
 
 Usage
 -----
@@ -115,7 +141,13 @@ The project has many usages, in 3 categories: annotation, conversion, and segmen
 For each category, please visit the relevant section/link below.
 
 
-TBC
+* :doc:`Conversion <aigis.convert>`: For accessing the conversion package usage and module guide.
+
+* :doc:`Annotation <aigis.annotate>`: For accessing the annotation package usage and module guide.
+
+* :doc:`Segmentation <aigis.segment>`: For accessing the segmentation package usage and module guide.
+
+* :doc:`Other <aigis.other>`: The repository also contains other scrips to help with coco dataset splitting and balancing and other useful scripts that are explained in this section.
 
 
 --------------
@@ -128,7 +160,7 @@ Please make sure to install all the required libraries in the
 file for development.
 
 Commit rules
-~~~~~~~~~~~~~
+~~~~~~~~~~~~
 
 In this project, ``pre-commit`` is being used. Hence, please make sure
 you have it in your env by ``pip install pre-commit``.
@@ -149,7 +181,7 @@ Alternatively, to add the hook, after installing pre-commit, run:
 
 
 Documentation manual update
----------------------
+---------------------------
 
 In case of new modules being added, the following update procedure can be followed:
 
@@ -180,3 +212,11 @@ For detailed explanation of modules and functions, please see the following page
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+--------------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   modules

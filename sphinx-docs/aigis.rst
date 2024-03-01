@@ -1,4 +1,4 @@
-aigis package
+AIGIS Package
 =============
 
 Subpackages

@@ -6,3 +6,4 @@ aigis
 
    aigis
    scripts
+   aigis.other

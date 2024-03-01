@@ -1,4 +1,4 @@
-scripts package
+Scripts Package
 ===============
 
 Submodules

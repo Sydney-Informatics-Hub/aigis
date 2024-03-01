@@ -1,6 +1,8 @@
 aigis.convert.orthogonalise package
 ===================================
 
+This package contains modules for orthogonalising the polygons in a shapefile.
+
 Submodules
 ----------
 
