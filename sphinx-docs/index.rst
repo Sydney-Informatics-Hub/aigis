@@ -191,13 +191,13 @@ In case of new modules being added, the following update procedure can be follow
 -  Remove the old ``rst`` files from the the docs directory, except
    ``index.rst``. 
 -  Make sure ``index.rst`` is not empty.
--  Make sure there is a ``config.py`` file in the ``docs`` directory, containing the root directory, version, and other project details.
+-  Make sure there is a ``config.py`` file in the ``sphinx-docs`` directory, containing the root directory, version, and other project details.
 -  Navigate to the upper directory: ``cd ..``.
--  Input ``sphinx-apidoc -o doc .`` to regenerate the ``rst`` files.
+-  Input ``sphinx-apidoc -o sphinx-docs .`` to regenerate the ``rst`` files.
 
 The next steps are not required, since they are automatically done by github actions. However, they are included here for completeness.
 
--  Navigate back to the ``doc`` directory.
+-  Navigate back to the ``sphinx-docs`` directory.
 -  Update the ``index.rst`` file to include the new ``rst`` files, if
    required. Usually not needed. (You don’t have to include the submodules.)
 -  Then input ``make html`` for updating the html file.
