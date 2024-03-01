@@ -44,6 +44,8 @@ Tools for converting aerial imagery data to various formats. For detailed instru
 ### segment
 Scripts for segmenting aerial imagery using deep learning models. Refer to the aerial_segmentation directory for more details.
 
+![Sydney city](docs/content/sydney_city_geospatial.jpeg)
+
 ### Recommended System Requirements
 
 All tools were built for Linux or MacOS systems.
