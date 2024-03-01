@@ -10,3 +10,4 @@ output/*
 
 # Python
 */**/__pycache__/*
+sphinx-docs/_build/
