@@ -12,12 +12,12 @@ import numpy as np
 import rasterio
 import rioxarray
 import torch
-from aigis.annotate import show_mask
-from aigis.convert.tiles import save_tiles
-
 from PIL import Image
 from samgeo.common import download_file, raster_to_geojson
 from samgeo.text_sam import LangSAM, array_to_image
+
+from aigis.annotate import show_mask
+from aigis.convert.tiles import save_tiles
 
 
 def is_empty(path):
@@ -43,7 +43,7 @@ def predict_with_box_reject(
 ):
     """Run both GroundingDINO and SAM model prediction on a single image.
 
-    NOTE: This makes use of code from from LangSAM.predict() 
+    NOTE: This makes use of code from from LangSAM.predict()
     (under MIT License at https://github.com/opengeos/segment-geospatial/blob/main/LICENSE)
     but this adds an option to reject boxes larger than
     a given fraction of the image area before the SAM predict step. This is inteded to be

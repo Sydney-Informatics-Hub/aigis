@@ -118,9 +118,11 @@ def crop_and_save_geojson(
             cropped_geojson = geojson[geojson.geometry.intersects(bbox)]
 
             # Drop id feild from the geojson properties if there are duplicates
-            if 'id' in cropped_geojson.columns and cropped_geojson['id'].duplicated().any():
-                cropped_geojson = cropped_geojson.drop(columns=['id'])
-            
+            if (
+                "id" in cropped_geojson.columns
+                and cropped_geojson["id"].duplicated().any()
+            ):
+                cropped_geojson = cropped_geojson.drop(columns=["id"])
 
             # Save the cropped GeoJSON with the same naming pattern
             cropped_geojson_filename = os.path.join(
