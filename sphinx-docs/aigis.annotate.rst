@@ -6,7 +6,7 @@ Using The Annotate Package
 --------------------------
 
 The ``aigis.annotate`` package provides a set of tools for annotating images and creating masks for use in training machine learning models. The package is designed to be used with aerial imagery, but can be used with any image data.
-Segment geospatial is used to detect trees in aerial imagery. The ``make_mask.py`` script in the ``scripts`` directory can be used to create tree annotations for a set of ``.tiff`` format aerial images.
+Segment geospatial is used to detect trees in aerial imagery. 
 
 
 Annotating Trees
