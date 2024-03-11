@@ -15,7 +15,7 @@ Using The Convert Package
 The convert package is used to convert between different coordinate systems and formats. The main use case is to convert between the COCO format and the geodataframe. 
 The COCO format is a JSON file that contains the coordinates of the objects in the image. The geodataframe is a pandas dataframe that contains the coordinates of the objects in the image, which can be either stored as geojson or geoparquet.
 
-o create tiles from a raster file, use the following command:
+To create tiles from a raster file, use the following command:
 
 .. code-block:: bash
 
@@ -32,7 +32,7 @@ input raster, use the following command:
 
 .. code-block:: bash
 
-   python -m aigis/scripts/geojson2coco.py \
+   python -m aigis/scripts/coco2geojson.py \
                    /path/to/data/raster_tiles/dir \
                    /path/to/data/predictions-coco.json \
                    --tile-extension tif \
@@ -47,7 +47,7 @@ multiple input images, use the following command:
 
 .. code-block:: bash
 
-   python -m aigis/scripts/geojson2coco.py \
+   python -m aigis/scripts/batch_geojson2coco.py \
                    --raster-dir /path/to/data/rasters/ \
                    --vector-dir /path/to/data/geojsons/ \
                    --output-dir /path/to/data/outputs/ \

@@ -35,7 +35,7 @@ The following steps are required to fine-tune a model:
 
 4. Run the fine-tuning script ``fine_tuning_detectron2.py``
 
-   Run ``fine_tuning_detectron2 -h`` to display the help message that describes all the available command-line options and arguments for model fine-tuning.
+   Run ``python aigis/scripts/fine_tuning_detectron2.py -h`` to display the help message that describes all the available command-line options and arguments for model fine-tuning.
 
    Example usage:
 
