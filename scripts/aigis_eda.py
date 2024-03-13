@@ -7,6 +7,13 @@ import pandas as pd
 from shapely.geometry import mapping
 import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+import os
+import geopandas as gpd
+import pandas as pd
+import seaborn as sns
 
 def merge_geojson(directory):
     # Create an empty geodataframe to store the merged data
@@ -228,10 +235,6 @@ stats_df = pd.DataFrame(all_statistics)
 # Display the final DataFrame with all statistics
 stats_df
 
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-
 # Assuming you have already calculated the stats_df DataFrame as described in the previous solution
 
 # Filter the DataFrame for buildings and trees
@@ -259,15 +262,6 @@ plt.xticks(rotation=45)
 # Show plot
 plt.show()
 
-
-# In[90]:
-
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-import os
-
-# Assuming you have already calculated the stats_df DataFrame as described in the previous solution
 
 # Filter the DataFrame for buildings
 buildings_df = stats_df[stats_df['layer'] == 'buildings']
@@ -304,14 +298,6 @@ for location in locations:
     
     # Show the plot
     plt.show()
-
-
-# In[92]:
-
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-import os
 
 # Assuming you have already calculated the stats_df DataFrame as described in the previous solution
 
@@ -350,16 +336,6 @@ for location in locations:
     
     # Show the plot
     plt.show()
-
-
-# In[93]:
-
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-import os
-
-# Assuming you have already calculated the stats_df DataFrame as described in the previous solution
 
 # Filter the DataFrame for buildings and trees
 buildings_df = stats_df[stats_df['layer'] == 'buildings']
@@ -402,15 +378,6 @@ for location in locations:
     # Show the plot
     plt.show()
 
-
-# In[84]:
-
-
-import os
-import pandas as pd
-import geopandas as gpd
-import matplotlib.pyplot as plt
-
 # Function to calculate statistics for each GeoJSON file
 def calculate_statistics(file_path):
     # Read GeoJSON file
@@ -425,213 +392,77 @@ def calculate_statistics(file_path):
     trees_count = len(gdf[gdf['layer'] == 'trees'])
     
     # Calculate the average area and total area for features in the 'buildings' and 'trees' layers
-    buildings_avg_area = gdf[gdf['layer'] == 'buildings'].geometry.area.mean()
-    buildings_total_area = gdf[gdf['layer'] == 'buildings'].geometry.area.sum()
-    
-    trees_avg_area = gdf[gdf['layer'] == 'trees'].geometry.area.mean()
-    trees_total_area = gdf[gdf['layer'] == 'trees'].geometry.area.sum()
-    
-    # Calculate the area that is not classified as building or tree
-    not_building_or_tree_area = total_extent_area - buildings_total_area - trees_total_area
-    
-    # Create a summary GeoDataFrame for this GeoJSON file
-    summary_df = gpd.GeoDataFrame({
-        'location': os.path.splitext(os.path.basename(file_path))[0],
-        'total_extent_area': total_extent_area,
-        'buildings_count': buildings_count,
-        'trees_count': trees_count,
-        'buildings_avg_area': buildings_avg_area,
-        'buildings_total_area': buildings_total_area,
-        'trees_avg_area': trees_avg_area,
-        'trees_total_area': trees_total_area,
-        'not_building_or_tree_area': not_building_or_tree_area
-    }, index=[0])
-    
-    return summary_df
 
-# Directory containing GeoJSON files
-directory = '/Users/henrylydecker/Desktop/lcz_demo_imgs/demo_results/'
+    # Function to calculate statistics for each GeoJSON file
+    def calculate_statistics(file_path):
+        # Read GeoJSON file
+        gdf = gpd.read_file(file_path)
+        
+        # Calculate total area of the GeoDataFrame extent
+        total_extent_area = gdf.total_bounds
+        total_extent_area = (total_extent_area[2] - total_extent_area[0]) * (total_extent_area[3] - total_extent_area[1])
+        
+        # Count the features in the layers 'buildings' and 'trees'
+        buildings_count = len(gdf[gdf['layer'] == 'buildings'])
+        trees_count = len(gdf[gdf['layer'] == 'trees'])
+        
+        # Calculate the average area and total area for features in the 'buildings' and 'trees' layers
+        buildings_avg_area = gdf[gdf['layer'] == 'buildings'].geometry.area.mean()
+        buildings_total_area = gdf[gdf['layer'] == 'buildings'].geometry.area.sum()
+        
+        trees_avg_area = gdf[gdf['layer'] == 'trees'].geometry.area.mean()
+        trees_total_area = gdf[gdf['layer'] == 'trees'].geometry.area.sum()
+        
+        # Calculate the area that is not classified as building or tree
+        not_building_or_tree_area = total_extent_area - buildings_total_area - trees_total_area
+        
+        # Create a summary GeoDataFrame for this GeoJSON file
+        summary_df = gpd.GeoDataFrame({
+            'location': os.path.splitext(os.path.basename(file_path))[0],
+            'total_extent_area': total_extent_area,
+            'buildings_count': buildings_count,
+            'trees_count': trees_count,
+            'buildings_avg_area': buildings_avg_area,
+            'buildings_total_area': buildings_total_area,
+            'trees_avg_area': trees_avg_area,
+            'trees_total_area': trees_total_area,
+            'not_building_or_tree_area': not_building_or_tree_area
+        }, index=[0])
+        
+        return summary_df
 
-# List to store individual summary GeoDataFrames
-summary_dfs = []
+    # Directory containing GeoJSON files
+    directory = '/Users/henrylydecker/Desktop/lcz_demo_imgs/demo_results/'
 
-# Iterate through each GeoJSON file in the directory
-for filename in os.listdir(directory):
-    if filename.endswith('.geojson'):
-        file_path = os.path.join(directory, filename)
-        summary_df = calculate_statistics(file_path)
-        summary_dfs.append(summary_df)
+    # List to store individual summary GeoDataFrames
+    summary_dfs = []
 
-# Merge all summary GeoDataFrames into one
-merged_df = gpd.GeoDataFrame(pd.concat(summary_dfs, ignore_index=True))
+    # Iterate through each GeoJSON file in the directory
+    for filename in os.listdir(directory):
+        if filename.endswith('.geojson'):
+            file_path = os.path.join(directory, filename)
+            summary_df = calculate_statistics(file_path)
+            summary_dfs.append(summary_df)
 
-# Calculate the percentage area covered by buildings, trees, and other for each location
-merged_df['buildings_percentage'] = (merged_df['buildings_total_area'] / merged_df['total_extent_area']) * 100
-merged_df['trees_percentage'] = (merged_df['trees_total_area'] / merged_df['total_extent_area']) * 100
-merged_df['other_percentage'] = ((merged_df['total_extent_area'] - merged_df['buildings_total_area'] - merged_df['trees_total_area']) / merged_df['total_extent_area']) * 100
+    # Merge all summary GeoDataFrames into one
+    merged_df = gpd.GeoDataFrame(pd.concat(summary_dfs, ignore_index=True))
 
-# Sort the DataFrame by the "trees_percentage" column in ascending order
-merged_df = merged_df.sort_values(by='trees_percentage')
+    # Calculate the percentage area covered by buildings, trees, and other for each location
+    merged_df['buildings_percentage'] = (merged_df['buildings_total_area'] / merged_df['total_extent_area']) * 100
+    merged_df['trees_percentage'] = (merged_df['trees_total_area'] / merged_df['total_extent_area']) * 100
+    merged_df['other_percentage'] = ((merged_df['total_extent_area'] - merged_df['buildings_total_area'] - merged_df['trees_total_area']) / merged_df['total_extent_area']) * 100
 
-# Plot the results
-ax = merged_df[['buildings_percentage', 'trees_percentage', 'other_percentage']].plot(kind='bar', stacked=True, figsize=(12, 6), color=['lightgrey', 'lightgreen', 'black'])
-ax.set_ylabel('Percentage (%)', fontsize=14)
-ax.set_xlabel('Location', fontsize=14)
-ax.set_title('Percentage of Area Covered by Buildings, Trees, and Other', fontsize=16)
-plt.xticks(range(len(merged_df)), merged_df['location'], rotation=45)
-plt.legend(title='Land Use', labels=['Building %', 'Tree %', 'Other %'], fontsize=12, loc='center left', bbox_to_anchor=(1, 0.5))
-plt.tight_layout()
-plt.show()
+    # Sort the DataFrame by the "trees_percentage" column in ascending order
+    merged_df = merged_df.sort_values(by='trees_percentage')
 
-
-# In[72]:
-
-
-import pandas as pd
-import geopandas as gpd
-import matplotlib.pyplot as plt
-
-# Assuming you have already calculated the stats_df DataFrame as described in the previous solution
-
-# Calculate the total area for each location
-total_area_by_location = stats_df.groupby('location')['area'].sum()
-
-# Calculate the total area covered by trees and buildings for each location
-total_trees_area_by_location = stats_df[stats_df['layer'] == 'trees'].groupby('location')['area'].sum()
-total_buildings_area_by_location = stats_df[stats_df['layer'] == 'buildings'].groupby('location')['area'].sum()
-
-# Calculate the percentage of each location covered by trees and buildings
-trees_percentage = (total_trees_area_by_location / total_area_by_location) * 100
-buildings_percentage = (total_buildings_area_by_location / total_area_by_location) * 100
-
-# Create a DataFrame for the percentages
-percentage_df = pd.DataFrame({'Trees (%)': trees_percentage, 'Buildings (%)': buildings_percentage})
-
-# Sort the DataFrame by the "Buildings (%)" column in descending order
-percentage_df = percentage_df.sort_values(by='Buildings (%)', ascending=False)
-
-# Plot the results
-ax = percentage_df.plot(kind='bar', figsize=(10, 6), color=['lightgreen', 'lightgrey'])
-ax.set_ylabel('Percentage (%)', fontsize=14)
-ax.set_xlabel('Location', fontsize=14)
-ax.set_title('Percentage of Area Covered by Trees and Buildings by Location', fontsize=16)
-plt.xticks(rotation=45)
-plt.legend(title='Land Use')
-plt.tight_layout()
-plt.show()
-
-
-# In[45]:
-
-
-
-
-
-# In[85]:
-
-
-import os
-import pandas as pd
-import geopandas as gpd
-import matplotlib.pyplot as plt
-
-# Function to calculate statistics for each GeoJSON file
-def calculate_statistics(file_path):
-    # Read GeoJSON file
-    gdf = gpd.read_file(file_path)
-    
-    # Calculate total area of the GeoDataFrame extent
-    total_extent_area = gdf.total_bounds
-    total_extent_area = (total_extent_area[2] - total_extent_area[0]) * (total_extent_area[3] - total_extent_area[1])
-    
-    # Count the features in the layers 'buildings' and 'trees'
-    buildings_count = len(gdf[gdf['layer'] == 'buildings'])
-    trees_count = len(gdf[gdf['layer'] == 'trees'])
-    
-    # Calculate the average area and total area for features in the 'buildings' and 'trees' layers
-    buildings_avg_area = gdf[gdf['layer'] == 'buildings'].geometry.area.mean()
-    buildings_total_area = gdf[gdf['layer'] == 'buildings'].geometry.area.sum()
-    
-    trees_avg_area = gdf[gdf['layer'] == 'trees'].geometry.area.mean()
-    trees_total_area = gdf[gdf['layer'] == 'trees'].geometry.area.sum()
-    
-    # Calculate the area that is not classified as building or tree
-    not_building_or_tree_area = total_extent_area - buildings_total_area - trees_total_area
-    
-    # Create a summary GeoDataFrame for this GeoJSON file
-    summary_df = gpd.GeoDataFrame({
-        'location': os.path.splitext(os.path.basename(file_path))[0],
-        'total_extent_area': total_extent_area,
-        'buildings_count': buildings_count,
-        'trees_count': trees_count,
-        'buildings_avg_area': buildings_avg_area,
-        'buildings_total_area': buildings_total_area,
-        'trees_avg_area': trees_avg_area,
-        'trees_total_area': trees_total_area,
-        'not_building_or_tree_area': not_building_or_tree_area
-    }, index=[0])
-    
-    return summary_df
-
-# Directory containing GeoJSON files
-directory = '/Users/henrylydecker/Desktop/lcz_demo_imgs/demo_results/'
-
-# List to store individual summary GeoDataFrames
-summary_dfs = []
-
-# Iterate through each GeoJSON file in the directory
-for filename in os.listdir(directory):
-    if filename.endswith('.geojson'):
-        file_path = os.path.join(directory, filename)
-        summary_df = calculate_statistics(file_path)
-        summary_dfs.append(summary_df)
-
-# Merge all summary GeoDataFrames into one
-merged_df = gpd.GeoDataFrame(pd.concat(summary_dfs, ignore_index=True))
-
-# Calculate the percentage area covered by buildings, trees, and other for each location
-merged_df['buildings_percentage'] = (merged_df['buildings_total_area'] / merged_df['total_extent_area']) * 100
-merged_df['trees_percentage'] = (merged_df['trees_total_area'] / merged_df['total_extent_area']) * 100
-merged_df['other_percentage'] = ((merged_df['total_extent_area'] - merged_df['buildings_total_area'] - merged_df['trees_total_area']) / merged_df['total_extent_area']) * 100
-
-# Sort the DataFrame by the "trees_percentage" column in ascending order
-merged_df = merged_df.sort_values(by='trees_percentage')
-
-# Plot pie charts for each location
-for index, row in merged_df.iterrows():
-    labels = ['Building %', 'Tree %', 'Other %']
-    sizes = [row['buildings_percentage'], row['trees_percentage'], row['other_percentage']]
-    colors = ['lightgrey', 'lightgreen', 'black']
-    
-    plt.figure(figsize=(6, 6))
-    plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
-    plt.title(row['location'], fontsize=16)
-    plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-    plt.show()
-
-import geopandas as gpd
-import pyarrow.parquet as pq
-
-# Read SA2 boundaries from GeoJSON
-sa2_boundaries = gpd.read_file("/Users/henrylydecker/Desktop/lcz_demo_imgs/demo_results/sa2_2021.geojson")
-
-# Read building and tree polygons from GeoParquet file
-data = gpd.read_parquet("/Users/henrylydecker/Desktop/lcz_demo_imgs/demo_results/aigis_data.parquet")
-
-# Spatial join to find buildings and trees within each SA2 boundary
-data_within_sa2 = gpd.sjoin(data, sa2_boundaries, op='within')
-
-# Calculate statistics
-sa2_stats = sa2_boundaries.copy()
-sa2_stats['building_count'] = data_within_sa2[data_within_sa2['type'] == 'building'].groupby('SA2_CODE').size()
-sa2_stats['building_area'] = data_within_sa2[data_within_sa2['type'] == 'building'].groupby('SA2_CODE')['geometry'].area.sum()
-sa2_stats['tree_count'] = data_within_sa2[data_within_sa2['type'] == 'tree'].groupby('SA2_CODE').size()
-sa2_stats['tree_area'] = data_within_sa2[data_within_sa2['type'] == 'tree'].groupby('SA2_CODE')['geometry'].area.sum()
-sa2_stats['total_area'] = sa2_stats['geometry'].area
-sa2_stats['building_percent'] = (sa2_stats['building_area'] / sa2_stats['total_area']) * 100
-sa2_stats['tree_percent'] = (sa2_stats['tree_area'] / sa2_stats['total_area']) * 100
-sa2_stats['average_building_area'] = sa2_stats['building_area'] / sa2_stats['building_count']
-sa2_stats['average_tree_area'] = sa2_stats['tree_area'] / sa2_stats['tree_count']
-
-# Print statistics
-print(sa2_stats[['SA2_CODE', 'building_count', 'building_area', 'building_percent', 'average_building_area', 'tree_count', 'tree_area', 'tree_percent', 'average_tree_area']])
+    # Plot pie charts for each location
+    for index, row in merged_df.iterrows():
+        labels = ['Building %', 'Tree %', 'Other %']
+        sizes = [row['buildings_percentage'], row['trees_percentage'], row['other_percentage']]
+        colors = ['lightgrey', 'lightgreen', 'black']
+        
+        plt.figure(figsize=(6, 6))
+        plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=140)
+        plt.title(row['location'], fontsize=16)
+        plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        plt.show()
