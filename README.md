@@ -24,6 +24,18 @@
 2. **convert:** Utilities for converting aerial imagery data to various formats, including COCO, GeoJSON, etc.
 3. **segment:** Scripts and notebooks for segmenting aerial imagery using deep learning models.
 
+## Why `aigis`?
+
+Rather than develop models that depend on getting a time series of images, specific input resolutions, electromagentic radiation bands, or mission prameters, we've created an AI GIS toolkit that uses generalist visual light vision transformer and MaskRCNN models.
+
+Train, test, deploy bespoke prediction models to classify, detect, and segment aerial & satellite imagery with `aigis`.
+
+But wait, you don't have training data? No problem, use `aigis.annotate` module and generate annotations from scratch!
+
+Take those annotations and run them through `aigis.segment` pipeline and now you have lightweight, production ready models that can run at continental scale or be deployed on compute-limited edge applications for real-time inference in the field.
+
+The glue linking this all together, `aigis.convert`, supports seemless transformation of geospatial data into the forms AI models need, and then bringing model predictions back into GIS analysis ready forms.
+
 ## Installation
 
 Create a python environment for the project, we recommend [`conda`](https://www.anaconda.com/download):
@@ -60,8 +72,10 @@ All tools were built for Linux or MacOS systems.
 
 High resolution aerial imagery quickly becomes very computationally intensive to work with, so we recommend using high powered workstations or cloud computing environments.
 
-Segmentation model fine tuning and prediction are best with CUDA GPUs. An RTX 4090 or A100 is recommended for best performance. 
+Model fine tuning are best with CUDA GPUs. One or more RTX 4090 or A100 GPUs are recommended for best performance. 
 Models can be fine tuned on Google Colab free T4 GPUs, but larger datasets and longer runs should run on other compute platforms.
+
+Inference and postprocessing both benefit from CUDA GPUs.
 
 ## `aigis` datasets
 
