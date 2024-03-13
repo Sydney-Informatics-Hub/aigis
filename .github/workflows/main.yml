@@ -1,0 +1,23 @@
+name: "c2c"
+on: [push]
+
+jobs:
+  test:
+    name: setup environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        
+      - name: install cloc
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - run: sudo npm install cloc -g
+        
+      - name: comment to code ratio
+        uses: deep5050/comment-to-code-ratio-action@main
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          issue_number: 1
+          options: '--quiet ./ --hide-rate --git --unix --md --out=report.md --timeout=20 --by-percent=cmb --by-file --exclude-dir=node_modules --exclude-lang=JSON,XML'
