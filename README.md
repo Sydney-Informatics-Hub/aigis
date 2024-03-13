@@ -83,7 +83,7 @@ Inference and postprocessing both benefit from CUDA GPUs.
 
 We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment building outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
 
-Our models's predictions are available as a shapefile in GeoParquet, with almost one million buildings.
+Our model's predictions are available as a shapefile in GeoParquet, with almost one million buildings.
 
 ![Greater Sydney Buildings](docs/content/gsu_buildings.png)
 
@@ -91,7 +91,7 @@ Our models's predictions are available as a shapefile in GeoParquet, with almost
 
 We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment tree patch outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
 
-Our models's predictions are available as a shapefile in GeoParquet, with 2 million tree patches.
+Our model's predictions are available as a shapefile in GeoParquet, with 2 million tree patches.
 
 ![Greate Sydney Tree](docs/content/gsu_trees.png)
 
