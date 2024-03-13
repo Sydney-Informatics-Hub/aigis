@@ -55,19 +55,23 @@ High resolution aerial imagery quickly becomes very computationally intensive to
 Segmentation model fine tuning and prediction are best with CUDA GPUs. An RTX 4090 or A100 is recommended for best performance. 
 Models can be fine tuned on Google Colab free T4 GPUs, but larger datasets and longer runs should run on other compute platforms.
 
-## Example Usage
+## `aigis` datasets
 
 ### Building Segmentation
 
 We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment building outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
 
-Our models's predictions are available as a shapefile in GeoJSON, with almost one million buildings (980k).
+Our models's predictions are available as a shapefile in GeoParquet, with almost one million buildings.
 
 ![Greater Sydney Buildings](docs/content/gsu_buildings.png)
 
 ### Tree Segmentation
 
-WIP
+We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment tree patch outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
+
+Our models's predictions are available as a shapefile in GeoParquet, with 2 million tree patches.
+
+![Greate Sydney Tree](docs/content/gsu_trees.png)
 
 ##  Contributing
 
