@@ -24,13 +24,33 @@
 2. **convert:** Utilities for converting aerial imagery data to various formats, including COCO, GeoJSON, etc.
 3. **segment:** Scripts and notebooks for segmenting aerial imagery using deep learning models.
 
+## Why `aigis`?
+
+Rather than develop models that depend on getting a time series of images, specific input resolutions, electromagentic radiation bands, or mission prameters, we've created an AI GIS toolkit that uses generalist visual light vision transformer and MaskRCNN models.
+
+Train, test, deploy bespoke prediction models to classify, detect, and segment aerial & satellite imagery with `aigis`.
+
+But wait, you don't have training data? No problem, use `aigis.annotate` module and generate annotations from scratch!
+
+Take those annotations and run them through `aigis.segment` pipeline and now you have lightweight, production ready models that can run at continental scale or be deployed on compute-limited edge applications for real-time inference in the field.
+
+The glue linking this all together, `aigis.convert`, supports seemless transformation of geospatial data into the forms AI models need, and then bringing model predictions back into GIS analysis ready forms.
+
 ## Installation
+
+Create a python environment for the project, we recommend [`conda`](https://www.anaconda.com/download):
+
+```bash
+conda create -n aigis python==3.10
+conda activate aigis
+```
 
 Clone the repository:
 
 ```bash
 git clone https://github.com/Sydney-Informatics-Hub/aigis.git
-cd aigis
+
+pip install -e aigis
 ```
 
 ## Usage
@@ -52,22 +72,28 @@ All tools were built for Linux or MacOS systems.
 
 High resolution aerial imagery quickly becomes very computationally intensive to work with, so we recommend using high powered workstations or cloud computing environments.
 
-Segmentation model fine tuning and prediction are best with CUDA GPUs. An RTX 4090 or A100 is recommended for best performance. 
+Model fine tuning are best with CUDA GPUs. One or more RTX 4090 or A100 GPUs are recommended for best performance. 
 Models can be fine tuned on Google Colab free T4 GPUs, but larger datasets and longer runs should run on other compute platforms.
 
-## Example Usage
+Inference and postprocessing both benefit from CUDA GPUs.
+
+## `aigis` datasets
 
 ### Building Segmentation
 
 We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment building outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
 
-Our models's predictions are available as a shapefile in GeoJSON, with almost one million buildings (980k).
+Our models's predictions are available as a shapefile in GeoParquet, with almost one million buildings.
 
 ![Greater Sydney Buildings](docs/content/gsu_buildings.png)
 
 ### Tree Segmentation
 
-WIP
+We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment tree patch outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
+
+Our models's predictions are available as a shapefile in GeoParquet, with 2 million tree patches.
+
+![Greate Sydney Tree](docs/content/gsu_trees.png)
 
 ##  Contributing
 
