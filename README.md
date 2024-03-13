@@ -26,11 +26,19 @@
 
 ## Installation
 
+Create a python environment for the project, we recommend [`conda`](https://www.anaconda.com/download):
+
+```bash
+conda create -n aigis python==3.10
+conda activate aigis
+```
+
 Clone the repository:
 
 ```bash
 git clone https://github.com/Sydney-Informatics-Hub/aigis.git
-cd aigis
+
+pip install -e aigis
 ```
 
 ## Usage
