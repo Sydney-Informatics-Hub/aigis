@@ -70,6 +70,8 @@ Inference and postprocessing both benefit from CUDA GPUs.
 
 ## `aigis` datasets
 
+Explore our two featured example datasets using a [Felt map](https://felt.com/map/Sydney-Buildings-6drWs3o9ARViitVdt6qp60A?loc=-33.8282,150.8961,10.93z).
+
 ### Building Segmentation
 
 We've used the full `aigis` toolkit to fine tune segmentation models to detect and segment building outlines in aerial imagery. Our fine tuned model was then run on 37,000 high reslution aerial images across the entire Greater Sydney Urban area in New South Wales, Australia. 
