@@ -5,15 +5,28 @@ import torch.nn.functional as F
 from transformers import ViTImageProcessor, ViTForImageClassification
 from PIL import Image
 import argparse
-import rasterio
-from shapely.geometry import Polygon
-from aigis.convert.coordinates import wkt_parser
-import geopandas as gpd
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 processor = ViTImageProcessor.from_pretrained("ViT_LCZs_v2", local_files_only=True)
 model = ViTForImageClassification.from_pretrained("ViT_LCZs_v2", local_files_only=True).to(device)
+
+def get_image_files(directory):
+    """
+    Recursively finds all image files in the given directory and its subdirectories.
+
+    Args:
+        directory (str): The path to the directory.
+
+    Returns:
+        List[str]: A list of image file paths.
+    """
+    image_files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                image_files.append(os.path.join(root, file))
+    return image_files
 
 def predict(image_path):
     image = Image.open(image_path)
@@ -25,7 +38,7 @@ def predict(image_path):
     label = model.config.id2label[predicted_class_idx].split(",")[0]
     return label, float(predicted_class_prob)
 
-def predict_images(input_dir, output_name,user_crs=None):
+def predict_images(input_dir, output_csv):
     """
     Predicts the labels and confidences for a set of images in the given input directory,
     and writes the results to a CSV file specified by the output_csv parameter.
@@ -41,39 +54,22 @@ def predict_images(input_dir, output_name,user_crs=None):
     predictions = []
     for image_file in image_files:
         image_path = os.path.join(input_dir, image_file)
-        # get the image bounds form the geotiff
-        with rasterio.open(image_path) as src:
-            bounds = src.bounds
-            if user_crs is None:
-                user_crs = src.crs.to_wkt()
-                user_crs = wkt_parser(user_crs)
-        # make a polygon out of bounds
-        polygon = Polygon([(bounds.left, bounds.bottom), (bounds.right, bounds.bottom), (bounds.right, bounds.top), (bounds.left, bounds.top)])
-        
-
         label, confidence = predict(image_path)
-        predictions.append((image_file, label, confidence, polygon))
+        predictions.append((image_file, label, confidence))
 
-    with open(output_name+".csv", 'w', newline='') as csvfile:
+    with open(output_csv, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['Image Filename', 'Prediction', 'Confidence'])
         writer.writerows(predictions)
 
-    # create a geodataframe from the predictions
-    gdf = gpd.GeoDataFrame(predictions, columns=['Image Filename', 'Prediction', 'Confidence', 'geometry'])
-    gdf.set_crs(user_crs, inplace=True)
-    gdf.to_parquet(output_name+".geoparquet")
-    gdf.to_file(output_name+".geojson", driver="GeoJSON")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ViT LCZ Classification')
     parser.add_argument('--input_dir', type=str, help='Path to input directory containing images')
-    parser.add_argument('--output_name', type=str, help='Path to output csv, geojson, and geparquet files')
-    parser.add_argument('--user_crs', type=str, help='User defined crs')
+    parser.add_argument('--output_csv', type=str, help='Path to output CSV file')
     args = parser.parse_args()
 
     input_dir = args.input_dir
-    output_name = args.output_name
-    user_crs = args.user_crs
+    output_csv = args.output_csv
 
-    predict_images(input_dir, output_name, user_crs)
+    predict_images(input_dir, output_csv)
