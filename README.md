@@ -35,15 +35,6 @@ cd aigis
 
 ## Usage
 
-### annotate
-Scripts for annotating aerial imagery data. Detailed usage instructions can be found in the aerial_annotation directory.
-
-### convert
-Tools for converting aerial imagery data to various formats. For detailed instructions, refer to the aerial_conversion directory.
-
-### segment
-Scripts for segmenting aerial imagery using deep learning models. Refer to the aerial_segmentation directory for more details.
-
 ![Sydney city](docs/content/sydney_city_geospatial.jpeg)
 
 ### Recommended System Requirements
