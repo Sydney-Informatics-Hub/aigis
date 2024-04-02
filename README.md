@@ -55,7 +55,7 @@ pip install -e aigis
 
 ## Usage
 
-![Sydney city](docs/content/sydney_city_geospatial.jpeg)
+![Greater Sydney Dataset](https://github.com/Sydney-Informatics-Hub/aigis/assets/20785842/3df6b080-5a3f-4ae2-b949-52fb16c024b7)
 
 ### Recommended System Requirements
 
