@@ -1,5 +1,8 @@
 <p align="center">
-    <h1 align="center">AIGIS</h1>
+    <h1 align="center"><img src="docs/content/aigis.png" alt="aigis logo" width=150px> <br> AIGIS</h1>
+	
+
+
 </p>
 <p align="center">
     <em>AI annotation, segmentation, and conversion tools for GIS imagery</em>
@@ -14,7 +17,7 @@
 	</p>
 <hr>
 
-![aigis](docs/content/aigis.png)
+![Greater Sydney Dataset](https://github.com/Sydney-Informatics-Hub/aigis/assets/20785842/3df6b080-5a3f-4ae2-b949-52fb16c024b7)
 
 # aigis
 
@@ -54,8 +57,6 @@ pip install -e aigis
 ```
 
 ## Usage
-
-![Greater Sydney Dataset](https://github.com/Sydney-Informatics-Hub/aigis/assets/20785842/3df6b080-5a3f-4ae2-b949-52fb16c024b7)
 
 ### Recommended System Requirements
 
