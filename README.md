@@ -17,7 +17,7 @@
 	</p>
 <hr>
 
-![Greater Sydney Dataset](docs/content/Greater_Sydney_Dataset.jpg)
+![Greater Sydney Dataset](./docs/content/Greater_Sydney_Dataset.jpg)
 
 # aigis
 
@@ -73,7 +73,7 @@ Inference and postprocessing both benefit from CUDA GPUs.
 
 Explore our two featured example datasets using a [Felt map](https://felt.com/map/Sydney-Buildings-6drWs3o9ARViitVdt6qp60A?loc=-33.8282,150.8961,10.93z).
 
-![felt_map](docs/content/Felt_Map.jpeg)
+![felt_map](./docs/content/Felt_Map.jpeg)
 To load the matching NSW SixMaps aerial photography you have to click 1. background layers, then select 2. NSW SixMaps, as in the image above.
 
 ### Building Segmentation
@@ -82,7 +82,7 @@ We've used the full `aigis` toolkit to fine tune segmentation models to detect a
 
 Our models's predictions are available as a shapefile in GeoParquet, with almost one million buildings.
 
-![Greater Sydney Buildings](docs/content/gsu_buildings.png)
+![Greater Sydney Buildings](./docs/content/gsu_buildings.png)
 
 ### Tree Segmentation
 
@@ -90,7 +90,7 @@ We've used the full `aigis` toolkit to fine tune segmentation models to detect a
 
 Our models's predictions are available as a shapefile in GeoParquet, with 2 million tree patches.
 
-![Greate Sydney Tree](docs/content/gsu_trees.png)
+![Greate Sydney Tree](./docs/content/gsu_trees.png)
 
 ##  Contributing
 
