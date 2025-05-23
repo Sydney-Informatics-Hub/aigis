@@ -17,7 +17,7 @@
 	</p>
 <hr>
 
-![Greater Sydney Dataset](https://github.com/Sydney-Informatics-Hub/aigis/assets/20785842/3df6b080-5a3f-4ae2-b949-52fb16c024b7)
+![Greater Sydney Dataset](docs/content/Greater_Sydney_Dataset.jpg)
 
 # aigis
 
@@ -73,7 +73,7 @@ Inference and postprocessing both benefit from CUDA GPUs.
 
 Explore our two featured example datasets using a [Felt map](https://felt.com/map/Sydney-Buildings-6drWs3o9ARViitVdt6qp60A?loc=-33.8282,150.8961,10.93z).
 
-![felt_map](https://github.com/Sydney-Informatics-Hub/aigis/assets/20785842/3b0647ed-4a74-4941-9e3f-50075644f597)
+![felt_map](docs/content/Felt_Map.jpeg)
 To load the matching NSW SixMaps aerial photography you have to click 1. background layers, then select 2. NSW SixMaps, as in the image above.
 
 ### Building Segmentation
