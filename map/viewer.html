@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Greater Sydney Trees & Buildings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link
+    href="https://unpkg.com/maplibre-gl@5.3.0/dist/maplibre-gl.css"
+    rel="stylesheet"
+  />
+  <style>
+    html, body, #map {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: system-ui, sans-serif;
+    }
+
+    .panel {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 10;
+      background: rgba(255,255,255,0.95);
+      padding: 12px 14px;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      min-width: 220px;
+    }
+
+    .panel h1 {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+    }
+
+    .panel label {
+      display: block;
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    .panel button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: #2d6cdf;
+      color: white;
+      cursor: pointer;
+    }
+
+    .popup-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .popup-table td {
+      border-top: 1px solid #ddd;
+      padding: 4px 6px;
+      font-size: 12px;
+      vertical-align: top;
+    }
+
+    .popup-table td:first-child {
+      font-weight: 600;
+      width: 120px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div class="panel">
+    <h1>Greater Sydney Trees & Buildings</h1>
+    <label><input type="checkbox" id="imageryToggle" checked> Imagery</label>
+    <label><input type="checkbox" id="buildingsToggle" checked> Buildings</label>
+    <label><input type="checkbox" id="treesToggle" checked> Tree patches</label>
+    <button id="fitBtn">Fit to data</button>
+  </div>
+
+  <script type="module">
+    import maplibregl from "https://esm.sh/maplibre-gl@5.3.0";
+    import { Protocol, PMTiles } from "https://esm.sh/pmtiles@3.2.1";
+
+    const PMTILES_URL =
+      "https://huggingface.co/datasets/SIH/Greater-Sydney-Trees-Buildings/resolve/main/greater-sydney-trees-buildings.pmtiles?download=1";
+
+    const protocol = new Protocol();
+    maplibregl.addProtocol("pmtiles", protocol.tile);
+
+    const archive = new PMTiles(PMTILES_URL);
+    protocol.add(archive);
+
+    const header = await archive.getHeader();
+    const bounds = [
+      [header.minLon, header.minLat],
+      [header.maxLon, header.maxLat]
+    ];
+
+    const map = new maplibregl.Map({
+      container: "map",
+      hash: true,
+      attributionControl: true,
+      style: {
+        version: 8,
+        sources: {
+          imagery: {
+            type: "raster",
+            tiles: [
+              "https://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer/tile/{z}/{y}/{x}"
+            ],
+            tileSize: 256,
+            minzoom: 0,
+            maxzoom: 23,
+            attribution: "Imagery © NSW Spatial Services / Department of Customer Service"
+          },
+          gs: {
+            type: "vector",
+            url: `pmtiles://${PMTILES_URL}`
+          }
+        },
+        layers: [
+          {
+            id: "imagery",
+            type: "raster",
+            source: "imagery",
+            paint: {
+              "raster-resampling": "linear"
+            }
+          },
+          {
+            id: "buildings-fill",
+            type: "fill",
+            source: "gs",
+            "source-layer": "buildings",
+            paint: {
+              "fill-color": "#6e6e6e",
+              "fill-opacity": 0.28
+            }
+          },
+          {
+            id: "buildings-line",
+            type: "line",
+            source: "gs",
+            "source-layer": "buildings",
+            paint: {
+              "line-color": "#4a4a4a",
+              "line-width": [
+                "interpolate", ["linear"], ["zoom"],
+                12, 0.2,
+                18, 1.0
+              ]
+            }
+          },
+          {
+            id: "trees-fill",
+            type: "fill",
+            source: "gs",
+            "source-layer": "tree_patches",
+            paint: {
+              "fill-color": "#2f8f46",
+              "fill-opacity": 0.24
+            }
+          },
+          {
+            id: "trees-line",
+            type: "line",
+            source: "gs",
+            "source-layer": "tree_patches",
+            paint: {
+              "line-color": "#1f6a33",
+              "line-width": [
+                "interpolate", ["linear"], ["zoom"],
+                12, 0.2,
+                18, 0.8
+              ]
+            }
+          }
+        ]
+      }
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    map.on("load", () => {
+      map.fitBounds(bounds, { padding: 30, animate: false });
+    });
+
+    function setLayerVisibility(ids, visible) {
+      const v = visible ? "visible" : "none";
+      for (const id of ids) {
+        if (map.getLayer(id)) {
+          map.setLayoutProperty(id, "visibility", v);
+        }
+      }
+    }
+
+    document.getElementById("imageryToggle").addEventListener("change", (e) => {
+      setLayerVisibility(["imagery"], e.target.checked);
+    });
+
+    document.getElementById("buildingsToggle").addEventListener("change", (e) => {
+      setLayerVisibility(["buildings-fill", "buildings-line"], e.target.checked);
+    });
+
+    document.getElementById("treesToggle").addEventListener("change", (e) => {
+      setLayerVisibility(["trees-fill", "trees-line"], e.target.checked);
+    });
+
+    document.getElementById("fitBtn").addEventListener("click", () => {
+      map.fitBounds(bounds, { padding: 30, animate: true });
+    });
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function popupHtml(feature) {
+      const props = feature.properties || {};
+      const rows = Object.entries(props)
+        .slice(0, 20)
+        .map(([k, v]) => `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v)}</td></tr>`)
+        .join("");
+
+      return `
+        <div>
+          <div><strong>Layer:</strong> ${escapeHtml(feature.sourceLayer || "unknown")}</div>
+          <table class="popup-table">
+            ${rows || "<tr><td colspan='2'>No properties</td></tr>"}
+          </table>
+        </div>
+      `;
+    }
+
+    map.on("click", (e) => {
+      const features = map.queryRenderedFeatures(e.point, {
+        layers: ["buildings-fill", "trees-fill", "buildings-line", "trees-line"]
+      });
+      if (!features.length) return;
+
+      new maplibregl.Popup({ maxWidth: "340px" })
+        .setLngLat(e.lngLat)
+        .setHTML(popupHtml(features[0]))
+        .addTo(map);
+    });
+
+    for (const layerId of ["buildings-fill", "trees-fill"]) {
+      map.on("mouseenter", layerId, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", layerId, () => {
+        map.getCanvas().style.cursor = "";
+      });
+    }
+  </script>
+</body>
+</html>
