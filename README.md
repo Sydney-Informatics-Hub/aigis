@@ -71,10 +71,9 @@ Inference and postprocessing both benefit from CUDA GPUs.
 
 ## `aigis` datasets
 
-Explore our two featured example datasets using a [Felt map](https://felt.com/map/Sydney-Buildings-6drWs3o9ARViitVdt6qp60A?loc=-33.8282,150.8961,10.93z).
+Explore our two featured example datasets using a [PMTiles map](https://pmtiles.io/#url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSIH%2FGreater-Sydney-Trees-Buildings%2Fresolve%2Fmain%2Fgreater-sydney-trees-buildings.pmtiles&map=13.44/-33.86252/151.20767).
 
-![felt_map](./docs/content/Felt_Map.jpeg)
-To load the matching NSW SixMaps aerial photography you have to click 1. background layers, then select 2. NSW SixMaps, as in the image above.
+The datasets thenselves are available on [Huggingface Datasets](https://huggingface.co/datasets/SIH/Greater-Sydney-Trees-Buildings)
 
 ### Building Segmentation
 
