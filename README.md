@@ -138,6 +138,7 @@ The project team includes:
 - Sahand Vahidnia
 - Xinwei Luo
 - Thomas Mauch
+- Gordon McDonald
 
 ##  License
 
