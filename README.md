@@ -71,9 +71,9 @@ Inference and postprocessing both benefit from CUDA GPUs.
 
 ## `aigis` datasets
 
-Explore our two featured example datasets using a [PMTiles map](https://pmtiles.io/#url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSIH%2FGreater-Sydney-Trees-Buildings%2Fresolve%2Fmain%2Fgreater-sydney-trees-buildings.pmtiles&map=13.44/-33.86252/151.20767).
+Explore our two featured example datasets using a [PMTiles map](https://pmtiles.io/#url=https%3A%2F%2Fhuggingface.co%2Fdatasets%2FSIH%2FGreater-Sydney-Trees-Buildings%2Fresolve%2Fmain%2Fgreater-sydney-trees-buildings.pmtiles&map=13.44/-33.86252/151.20767) or [overlaid with NSW Sixmap aerial imagery](https://sydney-informatics-hub.github.io/aigis/map/#15.75/-33.889826/151.185079).
 
-The datasets thenselves are available on [Huggingface Datasets](https://huggingface.co/datasets/SIH/Greater-Sydney-Trees-Buildings)
+The datasets themselves are available on [Huggingface Datasets](https://huggingface.co/datasets/SIH/Greater-Sydney-Trees-Buildings)
 
 ### Building Segmentation
 
